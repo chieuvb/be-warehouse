@@ -1,15 +1,24 @@
 package com.example.warehouse.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-@Data
+import java.time.LocalDateTime;
+import java.util.Set;
+
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "warehouses")
+@ToString(exclude = {"zones", "inventories"})
+@EqualsAndHashCode(exclude = {"zones", "inventories"})
 public class Warehouse {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -17,18 +26,29 @@ public class Warehouse {
     @Column(unique = true, nullable = false, length = 50)
     private String code;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String name;
 
     @Column(columnDefinition = "TEXT")
     private String address;
 
-    @Column(name = "is_active")
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    // Bidirectional relationship to its zones
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<WarehouseZone> zones;
+
+    // Bidirectional relationship to its inventories
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ProductInventory> inventories;
 }

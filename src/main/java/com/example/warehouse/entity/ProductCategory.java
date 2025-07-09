@@ -1,14 +1,21 @@
 package com.example.warehouse.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
-@Data
+import java.time.LocalDateTime;
+import java.util.Set;
+
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "product_categories")
+@ToString(exclude = {"parent", "children", "products"})
+@EqualsAndHashCode(exclude = {"parent", "children", "products"})
 public class ProductCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,10 +27,20 @@ public class ProductCategory {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToOne
+    // Self-referencing relationship for parent
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private ProductCategory parent;
 
-    @Column(name = "created_at")
+    // Self-referencing relationship for children
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    private Set<ProductCategory> children;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // Bidirectional relationship to Products
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    private Set<Product> products;
 }

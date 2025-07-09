@@ -1,23 +1,30 @@
 package com.example.warehouse.utility;
 
+import com.example.warehouse.enums.ErrorCode;
 import com.example.warehouse.payload.response.ApiError;
 import com.example.warehouse.payload.response.ApiResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-public class ResponseUtil {
+import java.util.Map;
 
-    public static <T> ApiResponse<T> success(String message, T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .message(message)
-                .data(data)
-                .build();
+public final class ResponseUtil {
+
+    private ResponseUtil() {}
+
+    public static <T> ResponseEntity<ApiResponse<T>> createSuccessResponse(String message, T data) {
+        return ResponseEntity.ok(ApiResponse.success(message, data));
     }
 
-    public static <T> ApiResponse<T> error(String message, ApiError error) {
-        return ApiResponse.<T>builder()
-                .success(false)
-                .message(message)
-                .error(error)
-                .build();
+    public static ResponseEntity<ApiResponse<Object>> createErrorResponse(
+            HttpStatus status, ErrorCode errorCode, String message, String path, Map<String, String> validationErrors) {
+
+        ApiError apiError = new ApiError(errorCode, message, path, validationErrors);
+        String title = status.getReasonPhrase(); // e.g., "Not Found", "Conflict"
+        return new ResponseEntity<>(ApiResponse.error(title, apiError), status);
+    }
+
+    public static ResponseEntity<ApiResponse<Object>> createErrorResponse(HttpStatus status, ErrorCode errorCode, String message, String path) {
+        return createErrorResponse(status, errorCode, message, path, null);
     }
 }

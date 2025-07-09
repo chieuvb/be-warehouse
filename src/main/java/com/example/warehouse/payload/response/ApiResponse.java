@@ -1,35 +1,52 @@
 package com.example.warehouse.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
- * A generic and standardized API response wrapper.
- *
- * @param <T> The type of the data payload.
+ * A standardized generic wrapper for all API responses.
  */
-@Value // Use @Value for immutability
-@Builder
-@JsonInclude(JsonInclude.Include.NON_NULL) // Exclude null fields from JSON output
+@Getter
+@Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-    /**
-     * Indicates if the request was successful.
-     */
-    boolean success;
+
+    private final boolean success;
+
+    // Fields for a successful response
+    private String message;
+    private T data;
+
+    // Fields for a failed response
+    private String title;
+    private ApiError error;
+
+    // Private constructor for a successful response
+    private ApiResponse(boolean success, String message, T data) {
+        this.success = success;
+        this.message = message;
+        this.data = data;
+    }
+
+    // Private constructor for a failed response
+    private ApiResponse(boolean success, String title, ApiError error) {
+        this.success = success;
+        this.title = title;
+        this.error = error;
+    }
 
     /**
-     * A human-readable message providing details about the outcome.
+     * Factory method for creating a successful response.
      */
-    String message;
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>(true, message, data);
+    }
 
     /**
-     * The actual data payload of the response. Null if the request failed.
+     * Factory method for creating a failed response.
      */
-    T data;
-
-    /**
-     * Detailed error information. Null if the request was successful.
-     */
-    ApiError error;
+    public static <T> ApiResponse<T> error(String title, ApiError error) {
+        return new ApiResponse<>(false, title, error);
+    }
 }

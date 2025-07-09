@@ -1,23 +1,30 @@
 package com.example.warehouse.entity;
 
+import com.example.warehouse.enums.AuditAction;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "audit_logs")
 public class AuditLog {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id; // Using Long for log tables
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AuditAction action;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id")
     private User actor;
 
@@ -27,12 +34,10 @@ public class AuditLog {
     @Column(name = "object_id", nullable = false, length = 50)
     private String objectId;
 
+    @Column(columnDefinition = "TEXT")
     private String note;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    public enum AuditAction {
-        CREATE_INVENTORY, UPDATE_INVENTORY, DELETE_INVENTORY
-    }
 }

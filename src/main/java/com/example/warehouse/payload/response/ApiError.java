@@ -1,21 +1,41 @@
 package com.example.warehouse.payload.response;
 
-import com.example.warehouse.enums.ApiErrorCode;
+import com.example.warehouse.enums.ErrorCode;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
+import lombok.Setter;
 
-@Value // Using @Value for immutability
-@Builder
-@JsonInclude(JsonInclude.Include.NON_NULL) // Ignore null fields in JSON
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@Getter
+@Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiError {
-    /**
-     * Error code for machine to read and process.
-     */
-    ApiErrorCode code;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    private final LocalDateTime timestamp;
+    private final ErrorCode errorCode;
+    private final String message; // The detailed, human-readable error message
+    private final String path;
+    private Map<String, String> validationErrors;
 
     /**
-     * More detailed information about the error, often used for debugging.
+     * Main constructor for API errors.
      */
-    Object details;
+    public ApiError(ErrorCode errorCode, String message, String path) {
+        this.timestamp = LocalDateTime.now();
+        this.errorCode = errorCode;
+        this.message = message;
+        this.path = path;
+    }
+
+    /**
+     * Constructor for API errors that include validation failures.
+     */
+    public ApiError(ErrorCode errorCode, String message, String path, Map<String, String> validationErrors) {
+        this(errorCode, message, path);
+        this.validationErrors = validationErrors;
+    }
 }

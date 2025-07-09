@@ -1,21 +1,24 @@
 package com.example.warehouse.enums;
 
+import lombok.Getter;
+
 /**
  * Enum representing various stock log types in the warehouse management system.
  * Each type corresponds to a specific stock operation that can be logged.
  */
+@Getter
 public enum StockLogType {
-    INITIAL_STOCK("Initial Stock", "Initial stock setup"),
-    GOODS_RECEIPT("Goods Receipt", "Stock increase from purchase/transfer in"),
-    GOODS_ISSUE("Goods Issue", "Stock decrease from sales/transfer out"),
-    ADJUSTMENT_IN("Adjustment In", "Stock increase from inventory adjustment"),
-    ADJUSTMENT_OUT("Adjustment Out", "Stock decrease from inventory adjustment"),
-    STOCK_COUNT("Stock Count", "Stock update from physical count"),
-    RETURN_IN("Return In", "Stock increase from customer return"),
-    RETURN_OUT("Return Out", "Stock decrease from supplier return"),
-    DAMAGED("Damaged", "Stock decrease from damage/loss"),
-    EXPIRED("Expired", "Stock decrease from expiration"),
-    RESERVED("Reserved", "Stock reserved for orders");
+    INITIAL_STOCK("Initial Stock", "Initial stock quantity set up for a new product."),
+    GOODS_RECEIPT("Goods Receipt", "Stock increase from a purchase order or transfer in."),
+    GOODS_ISSUE("Goods Issue", "Stock decrease from a sales order or transfer out."),
+    ADJUSTMENT_IN("Adjustment In", "Stock increase from a manual inventory adjustment."),
+    ADJUSTMENT_OUT("Adjustment Out", "Stock decrease from a manual inventory adjustment."),
+    STOCK_COUNT("Stock Count", "Stock level updated after a physical inventory count."),
+    RETURN_IN("Return In", "Stock increase from a customer return."),
+    RETURN_OUT("Return Out", "Stock decrease from a return to a supplier."),
+    DAMAGED("Damaged", "Stock decrease due to damaged or lost goods."),
+    EXPIRED("Expired", "Stock decrease due to product expiration."),
+    RESERVED("Reserved", "Stock allocated for an open order, not physically moved yet.");
 
     private final String displayName;
     private final String description;
@@ -25,11 +28,4 @@ public enum StockLogType {
         this.description = description;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getDescription() {
-        return description;
-    }
 }

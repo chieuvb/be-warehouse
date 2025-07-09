@@ -1,101 +1,62 @@
 package com.example.warehouse.exception;
 
+import com.example.warehouse.enums.ErrorCode;
 import com.example.warehouse.payload.response.ApiError;
 import com.example.warehouse.payload.response.ApiResponse;
-import com.example.warehouse.enums.ApiErrorCode;
 import com.example.warehouse.utility.ResponseUtil;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
-@Slf4j
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    // Xử lý các lỗi xác thực của Spring Security
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
-        log.warn("Authentication failed: {}", ex.getMessage());
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-        ApiError apiError = ApiError.builder()
-                .code(ApiErrorCode.AUTH_INVALID_CREDENTIALS)
-                .details(ex.getMessage())
-                .build();
-
-        ApiResponse<Object> apiResponse = ResponseUtil.error("Invalid username or password", apiError);
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED); // 401
-    }
-
-    // Xử lý lỗi người dùng không tồn tại
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
-        log.warn("User not found: {}", ex.getMessage());
-
-        ApiError apiError = ApiError.builder()
-                .code(ApiErrorCode.USER_NOT_FOUND)
-                .details(ex.getMessage())
-                .build();
-
-        ApiResponse<Object> apiResponse = ResponseUtil.error("User not found", apiError);
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND); // 404
-    }
-
-    @ExceptionHandler(ResourceConflictException.class)
-    public ResponseEntity<ApiResponse<Object>> handleConflict(ResourceConflictException ex) {
-        log.warn("Resource conflict: {}", ex.getMessage());
-
-        ApiError apiError = ApiError.builder()
-                .code(ApiErrorCode.DATA_CONFLICT)
-                .details(ex.getMessage())
-                .build();
-
-        ApiResponse<Object> apiResponse = ResponseUtil.error("Resource conflict", apiError);
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.CONFLICT); // 409
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+    @ExceptionHandler({ResourceNotFoundException.class})
+    protected ResponseEntity<ApiResponse<Object>> handleResourceNotFound(RuntimeException ex, WebRequest request) {
         log.warn("Resource not found: {}", ex.getMessage());
-
-        ApiError apiError = ApiError.builder()
-                .code(ApiErrorCode.RESOURCE_NOT_FOUND)
-                .details(ex.getMessage())
-                .build();
-
-        ApiResponse<Object> apiResponse = ResponseUtil.error("The requested resource was not found", apiError);
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+        return ResponseUtil.createErrorResponse(HttpStatus.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, ex.getMessage(), getRequestPath(request));
     }
 
-    // Xử lý các lỗi chung, không mong muốn
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGlobalException(Exception ex, WebRequest request) {
-        log.error("An unexpected error occurred: ", ex);
+    @ExceptionHandler({ResourceConflictException.class})
+    protected ResponseEntity<ApiResponse<Object>> handleResourceConflict(RuntimeException ex, WebRequest request) {
+        log.warn("Data conflict: {}", ex.getMessage());
+        return ResponseUtil.createErrorResponse(HttpStatus.CONFLICT, ErrorCode.DATA_CONFLICT, ex.getMessage(), getRequestPath(request));
+    }
 
-        ApiError apiError = ApiError.builder()
-                .code(ApiErrorCode.INTERNAL_ERROR)
-                .details("An unexpected internal server error occurred.")
-                .build();
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
+        log.warn("Access Denied: User attempted to access a protected resource. Path: {}", getRequestPath(request));
+        String message = "You do not have permission to perform this action.";
+        return ResponseUtil.createErrorResponse(HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN_OPERATION, message, getRequestPath(request));
+    }
 
-        ApiResponse<Object> apiResponse = ResponseUtil.error("An internal error occurred. Please try again later.", apiError);
-
-        return new ResponseEntity<>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR); // 500
+    // This handler is crucial for catching failed login attempts
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadCredentials(BadCredentialsException ex, WebRequest request) {
+        log.warn("Authentication failed: Bad credentials for path {}", getRequestPath(request));
+        String message = "Invalid username or password.";
+        return ResponseUtil.createErrorResponse(HttpStatus.UNAUTHORIZED, ErrorCode.AUTH_INVALID_CREDENTIALS, message, getRequestPath(request));
     }
 
     @Override
@@ -105,21 +66,32 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             @NonNull HttpStatusCode status,
             @NonNull WebRequest request) {
 
-        // Lấy các lỗi validation và format lại
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+        Map<String, String> validationErrors = ex.getBindingResult().getAllErrors().stream()
+                .collect(Collectors.toMap(
+                        error -> ((FieldError) error).getField(),
+                        error -> error.getDefaultMessage() == null ? "Invalid value" : error.getDefaultMessage()
+                ));
 
-        ApiError apiError = ApiError.builder()
-                .code(ApiErrorCode.VALIDATION_FAILED) // Thêm mã lỗi này vào enum
-                .details(errors) // Trả về chi tiết lỗi của từng field
-                .build();
+        String path = getRequestPath(request);
+        String message = "Input validation failed";
+        log.warn("Validation error on path {}: {}", path, validationErrors);
 
-        ApiResponse<Object> apiResponse = ResponseUtil.error("Validation failed", apiError);
+        HttpStatus httpStatus = (HttpStatus) status;
+        ApiError apiError = new ApiError(ErrorCode.VALIDATION_FAILED, message, path, validationErrors);
+        ApiResponse<Object> apiResponse = ApiResponse.error(httpStatus.getReasonPhrase(), apiError);
 
-        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST); // 400
+        return new ResponseEntity<>(apiResponse, headers, status);
+    }
+
+    @ExceptionHandler({Exception.class})
+    public ResponseEntity<ApiResponse<Object>> handleAll(Exception ex, WebRequest request) {
+        String path = getRequestPath(request);
+        log.error("An unexpected error occurred on path {}:", path, ex);
+        String message = "An unexpected error occurred. Please contact support.";
+        return ResponseUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR, message, path);
+    }
+
+    private String getRequestPath(WebRequest request) {
+        return ((ServletWebRequest) request).getRequest().getRequestURI();
     }
 }
