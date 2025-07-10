@@ -4,6 +4,7 @@
       <w>chieuvb</w>
       <w>jsonwebtoken</w>
       <w>projectlombok</w>
+      <w>springdoc</w>
     </words>
   </dictionary>
 </component>
