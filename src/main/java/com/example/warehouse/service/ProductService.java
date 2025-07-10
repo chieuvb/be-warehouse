@@ -59,6 +59,20 @@ public class ProductService {
     }
 
     /**
+     * Retrieves a product by its SKU.
+     *
+     * @param sku The SKU of the product to retrieve
+     * @return The product response
+     * @throws ResourceNotFoundException if the product does not exist
+     */
+    @Transactional(readOnly = true)
+    public ProductResponse getProductBySku(String sku) {
+        return productRepository.findBySku(sku)
+                .map(productMapper::toProductResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "sku", sku));
+    }
+
+    /**
      * Creates a new product with a unique SKU.
      *
      * @param request The product request containing details for the new product
