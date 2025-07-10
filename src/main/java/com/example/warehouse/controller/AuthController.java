@@ -4,7 +4,6 @@ import com.example.warehouse.payload.request.LoginRequest;
 import com.example.warehouse.payload.request.RegisterRequest;
 import com.example.warehouse.payload.response.ApiResponse;
 import com.example.warehouse.payload.response.AuthResponse;
-import com.example.warehouse.payload.response.UserResponse;
 import com.example.warehouse.service.AuthService;
 import com.example.warehouse.utility.ResponseUtil;
 import jakarta.validation.Valid;
@@ -16,6 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Handles authentication-related endpoints such as login and registration.
+ * This controller provides endpoints for user authentication and registration.
+ * It uses the AuthService to handle the business logic.
+ */
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -23,12 +27,24 @@ public class AuthController {
 
     private final AuthService authService;
 
+    /**
+     * Handles user login requests.
+     *
+     * @param loginRequest The login request containing username and password.
+     * @return A response entity containing the authentication response.
+     */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         AuthResponse authResponse = authService.login(loginRequest);
         return ResponseUtil.createSuccessResponse("User logged in successfully!", authResponse);
     }
 
+    /**
+     * Handles user registration requests.
+     *
+     * @param registerRequest The registration request containing user details.
+     * @return A response entity indicating successful registration.
+     */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         AuthResponse newUser = authService.register(registerRequest);

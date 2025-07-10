@@ -1,7 +1,6 @@
 package com.example.warehouse.security;
 
 import com.example.warehouse.entity.User;
-import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,10 +12,7 @@ import java.util.stream.Collectors;
  * An adapter class that wraps the User entity to provide it to Spring Security.
  * This decouples the core domain entity from the security framework.
  */
-@AllArgsConstructor
-public class SecurityUser implements UserDetails {
-
-    private final User user;
+public record SecurityUser(User user) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

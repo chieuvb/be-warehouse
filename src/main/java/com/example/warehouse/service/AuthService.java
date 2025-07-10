@@ -2,6 +2,7 @@ package com.example.warehouse.service;
 
 import com.example.warehouse.entity.Role;
 import com.example.warehouse.entity.User;
+import com.example.warehouse.enums.AuditAction;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.payload.request.LoginRequest;
@@ -10,12 +11,12 @@ import com.example.warehouse.payload.response.AuthResponse;
 import com.example.warehouse.repository.RoleRepository;
 import com.example.warehouse.repository.UserRepository;
 import com.example.warehouse.security.JwtService;
+import com.example.warehouse.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,9 +32,11 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService; // Injected the AuditLogService
 
     @Transactional
     public AuthResponse login(LoginRequest loginRequest) {
+        // 1. Authenticate the user
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -41,31 +44,40 @@ public class AuthService {
                 )
         );
 
+        // 2. Set the authentication context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String jwtToken = jwtService.generateToken(userDetails);
+        // 3. Generate the JWT
+        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
+        String jwtToken = jwtService.generateToken(securityUser);
+
+        // 4. Log the successful login action
+        auditLogService.logAction(
+                securityUser.user(), // Get the actor directly from the principal
+                AuditAction.USER_LOGIN_SUCCESS,
+                "users",
+                securityUser.user().getId().toString(),
+                "User logged in successfully."
+        );
 
         return new AuthResponse(jwtToken);
     }
 
     @Transactional
     public AuthResponse register(RegisterRequest registerRequest) {
-        // 1. Check if username already exists
+        // 1. Check for username/email conflicts
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
             throw new ResourceConflictException("User", "username", registerRequest.getUsername());
         }
-
-        // 2. Check if email already exists
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new ResourceConflictException("User", "email", registerRequest.getEmail());
         }
 
-        // 3. Find the default role for new users
+        // 2. Find the default role for the new user
         Role userRole = roleRepository.findByName("ROLE_USER")
                 .orElseThrow(() -> new ResourceNotFoundException("Default role 'ROLE_USER' not found. Please configure the database."));
 
-        // 4. Create a new user entity
+        // 3. Create and save the new user entity
         User user = User.builder()
                 .username(registerRequest.getUsername())
                 .email(registerRequest.getEmail())
@@ -74,20 +86,27 @@ public class AuthService {
                 .isActive(true)
                 .roles(Set.of(userRole))
                 .build();
-
-        // 5. Save the user to the database
         User savedUser = userRepository.save(user);
 
-        // 6. Authenticate the user to generate a JWT token
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(savedUser.getUsername(), registerRequest.getPassword());
+        // 4. Log the registration action
+        auditLogService.logAction(
+                savedUser, // The actor is the newly created user
+                AuditAction.CREATE_USER,
+                "users",
+                savedUser.getId().toString(),
+                "New user registered."
+        );
 
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
+        // 5. Authenticate the new user and generate a token without a second login call
+        SecurityUser securityUser = new SecurityUser(savedUser);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                securityUser,
+                null, // Credentials are not needed post-registration
+                securityUser.getAuthorities()
+        );
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwtToken = jwtService.generateToken(userDetails);
-        // 7. Return the JWT token in the response
+
+        String jwtToken = jwtService.generateToken(securityUser);
         return new AuthResponse(jwtToken);
     }
 }
