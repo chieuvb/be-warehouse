@@ -3,16 +3,14 @@ package com.example.warehouse.payload.request;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * Represents a request payload for creating or updating a product in the warehouse management system.
+ * This class includes validation annotations to ensure that required fields are provided and valid.
+ */
 @Data
 public class ProductRequest {
-
-    @NotBlank(message = "SKU is required")
-    @Size(max = 50, message = "SKU cannot exceed 50 characters")
-    private String sku;
-
     @NotBlank(message = "Product name is required")
     private String name;
 

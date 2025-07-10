@@ -74,7 +74,7 @@ public class AuthService {
         }
 
         // 2. Find the default role for the new user
-        Role userRole = roleRepository.findByName("ROLE_USER")
+        Role userRole = roleRepository.findByName("ROLE_VIEWER")
                 .orElseThrow(() -> new ResourceNotFoundException("Default role 'ROLE_USER' not found. Please configure the database."));
 
         // 3. Create and save the new user entity
