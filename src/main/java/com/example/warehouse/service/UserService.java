@@ -5,6 +5,7 @@ import com.example.warehouse.entity.User;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.UserMapper;
+import com.example.warehouse.payload.request.ChangePasswordRequest;
 import com.example.warehouse.payload.request.UserCreateRequest;
 import com.example.warehouse.payload.request.UserUpdateRequest;
 import com.example.warehouse.payload.response.UserResponse;
@@ -13,6 +14,7 @@ import com.example.warehouse.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,6 +114,31 @@ public class UserService {
         // Consider business logic: should you be able to delete your own account?
         // Or the last admin account? For now, we allow deletion.
         userRepository.deleteById(userId);
+    }
+
+    /**
+     * Changes the password for the specified user after verifying their current password.
+     *
+     * @param username The username of the user changing their password.
+     * @param request  The request containing the current and new passwords.
+     * @throws BadCredentialsException if the current password is incorrect.
+     */
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequest request) {
+        // 1. Find the user by their username (from the security context)
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+
+        // 2. Verify that the provided current password matches the stored password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Incorrect current password provided.");
+        }
+
+        // 3. Encode the new password and update the user entity
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+
+        // 4. Save the updated user
+        userRepository.save(user);
     }
 
     private Set<Role> findRoles(Set<String> roleNames) {

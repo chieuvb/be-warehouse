@@ -51,12 +51,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseUtil.createErrorResponse(HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN_OPERATION, message, getRequestPath(request));
     }
 
-    // This handler is crucial for catching failed login attempts
+    /**
+     * Handles authentication failures, such as bad credentials during login
+     * or incorrect password during a password change.
+     */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Object>> handleBadCredentials(BadCredentialsException ex, WebRequest request) {
-        log.warn("Authentication failed: Bad credentials for path {}", getRequestPath(request));
+        String path = getRequestPath(request);
+        log.warn("Authentication failure for path {}: {}", path, ex.getMessage());
+
+        // Default message for login attempts
         String message = "Invalid username or password.";
-        return ResponseUtil.createErrorResponse(HttpStatus.UNAUTHORIZED, ErrorCode.AUTH_INVALID_CREDENTIALS, message, getRequestPath(request));
+        ErrorCode errorCode = ErrorCode.AUTH_INVALID_CREDENTIALS;
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        // Provide a more specific response if it's a password change attempt
+        if (ex.getMessage().contains("current password")) {
+            message = ex.getMessage();
+            status = HttpStatus.BAD_REQUEST; // Use 400 for a bad request, not 401
+        }
+
+        return ResponseUtil.createErrorResponse(status, errorCode, message, path);
     }
 
     @Override

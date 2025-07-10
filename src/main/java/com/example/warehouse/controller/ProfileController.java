@@ -1,17 +1,17 @@
 package com.example.warehouse.controller;
 
+import com.example.warehouse.payload.request.ChangePasswordRequest;
 import com.example.warehouse.payload.response.ApiResponse;
 import com.example.warehouse.payload.response.UserResponse;
 import com.example.warehouse.security.SecurityUser;
 import com.example.warehouse.service.UserService;
 import com.example.warehouse.utility.ResponseUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Handles endpoints related to the currently authenticated user's profile.
@@ -39,5 +39,23 @@ public class ProfileController {
         UserResponse userProfile = userService.getUserByUsername(currentUser.getUsername());
 
         return ResponseUtil.createSuccessResponse("User profile retrieved successfully", userProfile);
+    }
+
+    /**
+     * Allows the authenticated user to change their own password.
+     *
+     * @param currentUser The authenticated user principal.
+     * @param request     The request body containing password details.
+     * @return A success response.
+     */
+    @PostMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal SecurityUser currentUser,
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        userService.changePassword(currentUser.getUsername(), request);
+
+        return ResponseUtil.createSuccessResponse("Password changed successfully", null);
     }
 }

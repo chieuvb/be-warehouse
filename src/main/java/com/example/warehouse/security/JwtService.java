@@ -1,4 +1,4 @@
-package com.example.warehouse.service;
+package com.example.warehouse.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
