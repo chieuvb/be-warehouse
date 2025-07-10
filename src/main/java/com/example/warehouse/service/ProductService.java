@@ -3,7 +3,6 @@ package com.example.warehouse.service;
 import com.example.warehouse.entity.Product;
 import com.example.warehouse.entity.ProductCategory;
 import com.example.warehouse.entity.UnitOfMeasure;
-import com.example.warehouse.entity.User;
 import com.example.warehouse.enums.AuditAction;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
@@ -13,11 +12,9 @@ import com.example.warehouse.payload.response.ProductResponse;
 import com.example.warehouse.repository.ProductCategoryRepository;
 import com.example.warehouse.repository.ProductRepository;
 import com.example.warehouse.repository.UnitOfMeasureRepository;
-import com.example.warehouse.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +27,7 @@ public class ProductService {
     private final UnitOfMeasureRepository unitRepository;
     private final ProductMapper productMapper;
     private final AuditLogService auditLogService;
+    private final SecurityContextService securityContextService;
 
     @Transactional(readOnly = true)
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
@@ -68,7 +66,7 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         auditLogService.logAction(
-                getCurrentUser(),
+                securityContextService.getCurrentActor(), // Use the reusable service
                 AuditAction.CREATE_PRODUCT,
                 "products",
                 savedProduct.getId().toString(),
@@ -107,7 +105,7 @@ public class ProductService {
         Product updatedProduct = productRepository.save(product);
 
         auditLogService.logAction(
-                getCurrentUser(),
+                securityContextService.getCurrentActor(), // Use the reusable service
                 AuditAction.UPDATE_PRODUCT,
                 "products",
                 updatedProduct.getId().toString(),
@@ -127,20 +125,11 @@ public class ProductService {
         productRepository.delete(product);
 
         auditLogService.logAction(
-                getCurrentUser(),
+                securityContextService.getCurrentActor(), // Use the reusable service
                 AuditAction.DELETE_PRODUCT,
                 "products",
                 productId.toString(),
                 String.format("Deleted product '%s' with SKU '%s'", product.getName(), product.getSku())
         );
-    }
-
-    private User getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof SecurityUser) {
-            return ((SecurityUser) principal).user();
-        }
-        // Return null for system actions or if no user is authenticated
-        return null;
     }
 }

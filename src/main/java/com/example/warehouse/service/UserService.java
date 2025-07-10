@@ -35,7 +35,10 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-    private final AuditLogService auditLogService; // Assuming you have an AuditLogService for logging actions
+    private final AuditLogService auditLogService;
+    private final SecurityContextService securityContextService;
+
+    // ... (getAllUsers, getUserById, getUserByUsername methods are unchanged)
 
     /**
      * Retrieves all users and maps them to a paginated response DTO.
@@ -45,7 +48,6 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public Page<UserResponse> getAllUsers(Pageable pageable) {
-        // Use the mapper for cleaner code
         return userRepository.findAll(pageable).map(userMapper::toUserResponse);
     }
 
@@ -60,7 +62,6 @@ public class UserService {
     public UserResponse getUserById(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-        // Use the mapper
         return userMapper.toUserResponse(user);
     }
 
@@ -78,13 +79,6 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
-    /**
-     * Creates a new user with the provided details.
-     *
-     * @param request The request containing user details.
-     * @return A UserResponse DTO of the created user.
-     * @throws ResourceConflictException if a user with the same username or email already exists.
-     */
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -106,34 +100,25 @@ public class UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
+        User actor = securityContextService.getCurrentActor(); // Get the logged-in user who is performing the action
 
         // Log the user creation action
         auditLogService.logAction(
-                savedUser, // The actor is the newly created user
+                actor, // The actor is the admin who performed the action
                 AuditAction.CREATE_USER,
                 "users",
                 savedUser.getId().toString(),
-                "User created successfully."
+                String.format("User '%s' created new user '%s'", actor != null ? actor.getUsername() : "SYSTEM", savedUser.getUsername())
         );
 
         return userMapper.toUserResponse(savedUser);
     }
 
-    /**
-     * Updates an existing user's details.
-     *
-     * @param userId  The ID of the user to update.
-     * @param request The request containing updated user details.
-     * @return A UserResponse DTO of the updated user.
-     * @throws ResourceNotFoundException if no user is found with the given ID.
-     * @throws ResourceConflictException if the email is already in use by another user.
-     */
     @Transactional
     public UserResponse updateUser(Integer userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        // Check for email conflict with other users
         userRepository.findByEmail(request.getEmail()).ifPresent(existingUser -> {
             if (!existingUser.getId().equals(userId)) {
                 throw new ResourceConflictException("User", "email", request.getEmail());
@@ -148,88 +133,61 @@ public class UserService {
         user.setRoles(roles);
 
         User updatedUser = userRepository.save(user);
+        User actor = securityContextService.getCurrentActor(); // Get the logged-in user who is performing the action
 
         // Log the user update action
         auditLogService.logAction(
-                updatedUser, // The actor is the updated user
+                actor, // The actor is the admin who performed the action
                 AuditAction.UPDATE_USER,
                 "users",
                 updatedUser.getId().toString(),
-                "User updated successfully."
+                String.format("User '%s' updated user '%s'", actor != null ? actor.getUsername() : "SYSTEM", updatedUser.getUsername())
         );
 
         return userMapper.toUserResponse(updatedUser);
     }
 
-    /**
-     * Deletes a user by their ID.
-     *
-     * @param userId The ID of the user to delete.
-     * @throws ResourceNotFoundException if no user is found with the given ID.
-     */
     @Transactional
     public void deleteUser(Integer userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResourceNotFoundException("User", "id", userId);
-        }
+        User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        User actor = securityContextService.getCurrentActor(); // Get the actor before deleting the user
 
         // Log the user deletion action
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         auditLogService.logAction(
-                user, // The actor is the user being deleted
+                actor, // The actor is the admin who performed the action
                 AuditAction.DELETE_USER,
                 "users",
                 userId.toString(),
-                "User deleted successfully."
+                String.format("User '%s' deleted user '%s'", actor != null ? actor.getUsername() : "SYSTEM", userToDelete.getUsername())
         );
 
-        // Consider business logic: should you be able to delete your own account?
-        // Or the last admin account? For now, we allow deletion.
-        userRepository.deleteById(userId);
+        userRepository.delete(userToDelete);
     }
 
-    /**
-     * Changes the password for the specified user after verifying their current password.
-     *
-     * @param username The username of the user changing their password.
-     * @param request  The request containing the current and new passwords.
-     * @throws BadCredentialsException if the current password is incorrect.
-     */
     @Transactional
     public void changePassword(String username, ChangePasswordRequest request) {
-        // 1. Find the user by their username (from the security context)
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
 
-        // 2. Verify that the provided current password matches the stored password
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
             throw new BadCredentialsException("Incorrect current password provided.");
         }
 
-        // 3. Encode the new password and update the user entity
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
 
-        // 4. Log the password change action
+        // Log the password change action
         auditLogService.logAction(
-                user, // The actor is the user changing their password
+                user, // In this case, the actor IS the user being changed
                 AuditAction.CHANGE_PASSWORD,
                 "users",
                 user.getId().toString(),
-                "User changed their password successfully."
+                String.format("User '%s' changed their own password.", user.getUsername())
         );
-
-        // 5. Save the updated user
-        userRepository.save(user);
     }
 
-    /**
-     * Finds roles by their names and returns a set of Role entities.
-     *
-     * @param roleNames The set of role names to find.
-     * @return A set of Role entities corresponding to the provided names.
-     * @throws ResourceNotFoundException if any role name does not exist in the database.
-     */
     private Set<Role> findRoles(Set<String> roleNames) {
         Set<Role> roles = new HashSet<>();
         for (String roleName : roleNames) {
