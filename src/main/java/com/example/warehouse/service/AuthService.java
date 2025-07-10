@@ -50,7 +50,7 @@ public class AuthService {
     }
 
     @Transactional
-    public UserResponse register(RegisterRequest registerRequest) {
+    public AuthResponse register(RegisterRequest registerRequest) {
         // 1. Check if username already exists
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
             throw new ResourceConflictException("User", "username", registerRequest.getUsername());
@@ -78,12 +78,16 @@ public class AuthService {
         // 5. Save the user to the database
         User savedUser = userRepository.save(user);
 
-        // 6. Map the saved user to a safe response DTO
-        return UserResponse.builder()
-                .id(savedUser.getId())
-                .username(savedUser.getUsername())
-                .email(savedUser.getEmail())
-                .fullName(savedUser.getFullName())
-                .build();
+        // 6. Authenticate the user to generate a JWT token
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(savedUser.getUsername(), registerRequest.getPassword());
+
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwtToken = jwtService.generateToken(userDetails);
+        // 7. Return the JWT token in the response
+        return new AuthResponse(jwtToken);
     }
 }

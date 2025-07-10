@@ -30,10 +30,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        UserResponse newUser = authService.register(registerRequest);
+    public ResponseEntity<ApiResponse<AuthResponse>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        AuthResponse newUser = authService.register(registerRequest);
         // Using a 201 Created status for resource creation is a REST best practice
-        ApiResponse<UserResponse> response = ApiResponse.success("User registered successfully!", newUser);
+        ApiResponse<AuthResponse> response = ApiResponse.success("User registered successfully!", newUser);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }
