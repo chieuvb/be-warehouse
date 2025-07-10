@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/me") // A common and clean endpoint for the current user
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class ProfileController {
 
     private final UserService userService;
@@ -30,7 +31,6 @@ public class ProfileController {
      * @return A ResponseEntity containing the user's profile data.
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()") // Ensures only logged-in users can access this
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUserProfile(
             @AuthenticationPrincipal SecurityUser currentUser) {
 
@@ -49,7 +49,6 @@ public class ProfileController {
      * @return A success response.
      */
     @PostMapping("/change-password")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @AuthenticationPrincipal SecurityUser currentUser,
             @Valid @RequestBody ChangePasswordRequest request) {

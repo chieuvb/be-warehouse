@@ -161,7 +161,7 @@ public class UserService {
         return userMapper.toUserResponse(updatedUser);
     }
 
-/**
+    /**
      * Deletes a user by their ID.
      *
      * @param userId The ID of the user to delete.

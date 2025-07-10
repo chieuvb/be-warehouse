@@ -34,7 +34,9 @@ public enum AuditAction {
     // Zone actions
     CREATE_ZONE("Create Zone", "A new warehouse zone was created."),
     UPDATE_ZONE("Update Zone", "Zone details were updated."),
-    DELETE_ZONE("Delete Zone", "A warehouse zone was deleted.");
+    DELETE_ZONE("Delete Zone", "A warehouse zone was deleted."),
+
+    OTHER("Other", "An action that does not fit into the predefined categories.");
 
     private final String displayName;
     private final String description;
