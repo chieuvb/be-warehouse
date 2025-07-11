@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class ProductResponse {
     private Integer id;
     private String sku;
+    private String barcode;
     private String name;
     private String description;
     private String categoryName;

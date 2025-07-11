@@ -15,6 +15,7 @@ public class ProductMapper {
         return ProductResponse.builder()
                 .id(product.getId())
                 .sku(product.getSku())
+                .barcode(product.getBarcode())
                 .name(product.getName())
                 .description(product.getDescription())
                 .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)

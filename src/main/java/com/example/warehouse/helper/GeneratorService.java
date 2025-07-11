@@ -9,6 +9,8 @@ import com.example.warehouse.repository.WarehouseZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 @Service
 @RequiredArgsConstructor
 public class GeneratorService {
@@ -121,6 +123,55 @@ public class GeneratorService {
         } while (warehouseZoneRepository.existsByCode(nextCode));
 
         return nextCode;
+    }
+
+    /**
+     * Generates a unique 13-digit EAN-style barcode.
+     * It creates a random 12-digit base and calculates the 13th digit as a checksum,
+     * ensuring the final barcode is unique in the database.
+     *
+     * @return A unique 13-digit barcode string.
+     */
+    public String generateEan13Barcode() {
+        String fullBarcode;
+        // Use a do-while loop to guarantee uniqueness, though collisions are extremely rare.
+        do {
+            // Generate a random 12-digit number as the base.
+            long randomBase = ThreadLocalRandom.current().nextLong(100_000_000_000L, 1_000_000_000_000L);
+            String twelveDigits = String.valueOf(randomBase);
+
+            // Calculate the EAN-13 check digit.
+            int checkDigit = calculateEan13CheckDigit(twelveDigits);
+            fullBarcode = twelveDigits + checkDigit;
+
+        } while (productRepository.existsByBarcode(fullBarcode));
+
+        return fullBarcode;
+    }
+
+    /**
+     * Calculates the check digit for an EAN-13 barcode.
+     *
+     * @param twelveDigits The first 12 digits of the barcode.
+     * @return The calculated 13th check digit.
+     */
+    private int calculateEan13CheckDigit(String twelveDigits) {
+        int sumOdd = 0;
+        int sumEven = 0;
+
+        for (int i = 0; i < twelveDigits.length(); i++) {
+            int digit = Character.getNumericValue(twelveDigits.charAt(i));
+            if ((i + 1) % 2 == 0) { // Even position (2nd, 4th, ...)
+                sumEven += digit;
+            } else { // Odd position (1st, 3rd, ...)
+                sumOdd += digit;
+            }
+        }
+
+        int totalSum = sumOdd + (sumEven * 3);
+        int remainder = totalSum % 10;
+
+        return (remainder == 0) ? 0 : 10 - remainder;
     }
 
     /**

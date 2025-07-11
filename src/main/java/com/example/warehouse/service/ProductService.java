@@ -32,7 +32,7 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final AuditLogService auditLogService;
     private final SecurityContextService securityContextService;
-    private final GeneratorService skuGeneratorService; // Inject the new service
+    private final GeneratorService generatorService;
 
     /**
      * Retrieves all products with pagination support.
@@ -74,7 +74,7 @@ public class ProductService {
     }
 
     /**
-     * Creates a new product with a unique SKU.
+     * Creates a new product with a unique SKU and Barcode.
      *
      * @param request The product request containing details for the new product
      * @return The created product response
@@ -82,19 +82,21 @@ public class ProductService {
      */
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
-        // 1. Fetch related entities needed for SKU generation and product creation
+        // 1. Fetch related entities
         ProductCategory category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("ProductCategory", "id", request.getCategoryId()));
 
         UnitOfMeasure unit = unitRepository.findById(request.getBaseUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("UnitOfMeasure", "id", request.getBaseUnitId()));
 
-        // 2. Generate the unique SKU using the dedicated service
-        String generatedSku = skuGeneratorService.generateSku(category, request.getName(), unit);
+        // 2. Generate unique SKU and Barcode
+        String generatedSku = generatorService.generateSku(category, request.getName(), unit);
+        String generatedBarcode = generatorService.generateEan13Barcode(); // Generate the barcode
 
-        // 3. Build the new product with the generated SKU
+        // 3. Build the new product with the generated values
         Product product = Product.builder()
                 .sku(generatedSku)
+                .barcode(generatedBarcode) // Set the generated barcode
                 .name(request.getName())
                 .description(request.getDescription())
                 .category(category)
@@ -118,20 +120,19 @@ public class ProductService {
     }
 
     /**
-     * Updates an existing product, excluding the SKU.
+     * Updates an existing product by its ID.
      *
      * @param productId The ID of the product to update
-     * @param request   The product request containing updated details
+     * @param request   The request payload containing updated product information
      * @return The updated product response
-     * @throws ResourceNotFoundException if the product, category, or unit of measure does not exist
+     * @throws ResourceNotFoundException if the product does not exist
      */
     @Transactional
     public ProductResponse updateProduct(Integer productId, ProductRequest request) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
 
-        // Note: We DO NOT update the SKU. It is immutable.
-        // The logic for checking SKU conflicts is removed from the update method.
+        // Note: We DO NOT update the SKU or the Barcode. They are immutable.
 
         ProductCategory category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("ProductCategory", "id", request.getCategoryId()));
@@ -139,7 +140,7 @@ public class ProductService {
         UnitOfMeasure unit = unitRepository.findById(request.getBaseUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("UnitOfMeasure", "id", request.getBaseUnitId()));
 
-        // Update all fields EXCEPT the SKU
+        // Update all fields EXCEPT the immutable ones
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setCategory(category);
