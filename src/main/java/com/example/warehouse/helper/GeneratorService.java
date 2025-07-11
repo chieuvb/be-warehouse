@@ -2,8 +2,10 @@ package com.example.warehouse.helper;
 
 import com.example.warehouse.entity.ProductCategory;
 import com.example.warehouse.entity.UnitOfMeasure;
+import com.example.warehouse.entity.Warehouse;
 import com.example.warehouse.repository.ProductRepository;
 import com.example.warehouse.repository.WarehouseRepository;
+import com.example.warehouse.repository.WarehouseZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,7 @@ public class GeneratorService {
 
     private final ProductRepository productRepository;
     private final WarehouseRepository warehouseRepository;
+    private final WarehouseZoneRepository warehouseZoneRepository;
 
     /**
      * Generates a unique SKU based on product attributes.
@@ -93,6 +96,41 @@ public class GeneratorService {
         } while (warehouseRepository.existsByCode(nextCode));
 
         return nextCode;
+    }
+
+    /**
+     * Generates a unique code for a warehouse zone based on the parent warehouse and zone name.
+     * Example: Warehouse "WH-MAIN", Zone "Receiving" -> "WH-MAIN-RECV"
+     *
+     * @param warehouse The parent warehouse entity.
+     * @param zoneName The name of the new zone.
+     * @return A unique, formatted warehouse zone code.
+     */
+    public String generateWarehouseZoneCode(Warehouse warehouse, String zoneName) {
+        String baseCode = createBaseZoneCode(warehouse.getCode(), zoneName);
+
+        if (!warehouseZoneRepository.existsByCode(baseCode)) {
+            return baseCode;
+        }
+
+        // If not unique, find the next available numeric suffix
+        int counter = 1;
+        String nextCode;
+        do {
+            nextCode = String.format("%s-%02d", baseCode, counter++);
+        } while (warehouseZoneRepository.existsByCode(nextCode));
+
+        return nextCode;
+    }
+
+    /**
+     * Creates a sanitized, uppercase base code for a warehouse zone.
+     * Example: ("WH-MAIN", "Receiving") -> "WH-MAIN-RECV"
+     */
+    private String createBaseZoneCode(String warehouseCode, String zoneName) {
+        String zonePart = zoneName.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+        zonePart = zonePart.substring(0, Math.min(zonePart.length(), 4));
+        return String.format("%s-%s", warehouseCode, zonePart);
     }
 
     /**

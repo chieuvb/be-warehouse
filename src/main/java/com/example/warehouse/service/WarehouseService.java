@@ -89,7 +89,7 @@ public class WarehouseService {
         return warehouseMapper.toWarehouseResponse(savedWarehouse);
     }
 
-/**
+    /**
      * Updates an existing warehouse.
      *
      * @param warehouseId the ID of the warehouse to update

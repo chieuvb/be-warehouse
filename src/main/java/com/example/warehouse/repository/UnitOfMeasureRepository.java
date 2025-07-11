@@ -4,12 +4,16 @@ import com.example.warehouse.entity.UnitOfMeasure;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface UnitOfMeasureRepository extends JpaRepository<UnitOfMeasure, Integer> {
 
-    // Custom query methods can be added here if needed;
-    // For example, to find a unit by name:
-    // Optional<UnitOfMeasure> findByName(String name);
+    Optional<UnitOfMeasure> findByName(String name);
 
-    // You can also add methods to handle specific queries related to UnitOfMeasure
+    Optional<UnitOfMeasure> findByAbbreviation(String abbreviation);
+
+    boolean existsByName(String name);
+
+    boolean existsByAbbreviation(String abbreviation);
 }

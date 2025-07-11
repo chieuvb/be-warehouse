@@ -41,6 +41,11 @@ public enum AuditAction {
     UPDATE_ROLE("Update Role", "Role details were updated."),
     DELETE_ROLE("Delete Role", "A role was deleted."),
 
+    // Unit of Measure actions
+    CREATE_UNIT_OF_MEASURE("Create Unit of Measure", "A new unit of measure was created."),
+    UPDATE_UNIT_OF_MEASURE("Update Unit of Measure", "Unit of measure details were updated."),
+    DELETE_UNIT_OF_MEASURE("Delete Unit of Measure", "A unit of measure was deleted."),
+
     OTHER("Other", "An action that does not fit into the predefined categories.");
 
     private final String displayName;

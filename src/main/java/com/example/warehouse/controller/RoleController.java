@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping("/roles")
 @RequiredArgsConstructor
 // Role management is a high-privilege operation, restricted to Admins.
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 public class RoleController {
 
     private final RoleService roleService;

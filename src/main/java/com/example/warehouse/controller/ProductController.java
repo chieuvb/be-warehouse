@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_WAREHOUSE_MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
 public class ProductController {
 
     private final ProductService productService;
