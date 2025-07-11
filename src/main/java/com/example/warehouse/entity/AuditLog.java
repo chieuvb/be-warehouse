@@ -1,43 +1,63 @@
 package com.example.warehouse.entity;
 
-import com.example.warehouse.enums.AuditAction;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+/**
+ * Records audit trails of actions performed in the system.
+ * Corresponds to the `audit_logs` table.
+ */
 @Entity
 @Table(name = "audit_logs")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AuditLog {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Using Long for log tables
+    private Long id; // bigint maps to Long
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AuditAction action;
+    @Column(name = "action", nullable = false, length = 50)
+    private String action; // e.g., "CREATE", "UPDATE", "DELETE"
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actor_id")
+    @JoinColumn(name = "actor_id", referencedColumnName = "id")
+    @ToString.Exclude
     private User actor;
 
     @Column(name = "table_affected", nullable = false, length = 50)
     private String tableAffected;
 
     @Column(name = "object_id", nullable = false, length = 50)
-    private String objectId;
+    private String objectId; // ID of the affected record, stored as String
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "note", columnDefinition = "TEXT")
     private String note;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        AuditLog auditLog = (AuditLog) o;
+        return getId() != null && Objects.equals(getId(), auditLog.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
 }
