@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductCategoryRepository extends JpaRepository<ProductCategory, Integer> {
 
-    // Custom query methods can be added here if needed
+    // Custom query methods can be added here if needed;
     // For example, to find a category by name:
     // Optional<ProductCategory> findByName(String name);
 

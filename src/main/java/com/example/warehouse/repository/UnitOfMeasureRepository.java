@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UnitOfMeasureRepository extends JpaRepository<UnitOfMeasure, Integer> {
 
-    // Custom query methods can be added here if needed
+    // Custom query methods can be added here if needed;
     // For example, to find a unit by name:
     // Optional<UnitOfMeasure> findByName(String name);
 

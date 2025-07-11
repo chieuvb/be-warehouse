@@ -15,13 +15,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-/* * Controller for managing warehouses.
- * Provides endpoints to create, update, delete, and retrieve warehouses.
+/**
+ * Controller for managing warehouses in the warehouse management system.
+ * Provides endpoints for CRUD operations on warehouses.
  */
 @RestController
 @RequestMapping("/warehouses")
 @RequiredArgsConstructor
-// Secure all endpoints to be accessible only by users with 'ROLE_ADMIN' or 'ROLE_WAREHOUSE_MANAGER'
 @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_WAREHOUSE_MANAGER')")
 public class WarehouseController {
 
@@ -35,7 +35,7 @@ public class WarehouseController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<WarehouseResponse>>> getAllWarehouses(
-            @PageableDefault(size = 8, sort = "name") Pageable pageable) {
+            @PageableDefault(sort = "name") Pageable pageable) {
         Page<WarehouseResponse> warehouses = warehouseService.getAllWarehouses(pageable);
         return ResponseUtil.createSuccessResponse("Warehouses retrieved successfully", warehouses);
     }

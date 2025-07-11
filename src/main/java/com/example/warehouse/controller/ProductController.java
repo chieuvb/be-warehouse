@@ -35,7 +35,7 @@ public class ProductController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProducts(
-            @PageableDefault(size = 8, sort = "name") Pageable pageable) {
+            @PageableDefault(sort = "name") Pageable pageable) {
         Page<ProductResponse> products = productService.getAllProducts(pageable);
         return ResponseUtil.createSuccessResponse("Products retrieved successfully", products);
     }

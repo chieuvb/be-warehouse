@@ -38,7 +38,6 @@ public class UserService {
     private final AuditLogService auditLogService;
     private final SecurityContextService securityContextService;
 
-    // ... (getAllUsers, getUserById, getUserByUsername methods are unchanged)
 
     /**
      * Retrieves all users and maps them to a paginated response DTO.

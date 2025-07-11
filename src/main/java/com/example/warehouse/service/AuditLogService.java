@@ -5,6 +5,7 @@ import com.example.warehouse.entity.User;
 import com.example.warehouse.enums.AuditAction;
 import com.example.warehouse.payload.response.AuditLogResponse;
 import com.example.warehouse.repository.AuditLogRepository;
+import com.example.warehouse.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
+    private final UserRepository userRepository;
 
     /**
      * Creates and saves an audit log entry. This is the core method for logging user actions.
@@ -46,8 +48,24 @@ public class AuditLogService {
      * @return A page of AuditLogResponse DTOs.
      */
     @Transactional(readOnly = true)
-    public Page<AuditLogResponse> getAuditLogs(Pageable pageable) {
+    public Page<AuditLogResponse> getAllAuditLogs(Pageable pageable) {
         return auditLogRepository.findAll(pageable)
+                .map(this::mapToAuditLogResponse);
+    }
+
+    /**
+     * Retrieves a paginated list of audit logs filtered by the actor.
+     *
+     * @param username    The user whose actions are being queried.
+     * @param pageable Pagination information.
+     * @return A page of AuditLogResponse DTOs for the specified actor.
+     */
+    @Transactional
+    public Page<AuditLogResponse> getAuditLogsByActor(String username, Pageable pageable) {
+        User actor = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+
+        return auditLogRepository.findByActor(actor, pageable)
                 .map(this::mapToAuditLogResponse);
     }
 
