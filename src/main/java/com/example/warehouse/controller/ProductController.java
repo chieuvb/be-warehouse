@@ -65,6 +65,18 @@ public class ProductController {
     }
 
     /**
+     * Retrieves a product by its barcode.
+     *
+     * @param barcode The barcode of the product to retrieve
+     * @return The product response
+     */
+    @GetMapping("/barcode/{barcode}")
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductByBarcode(@PathVariable String barcode) {
+        ProductResponse product = productService.getProductByBarcode(barcode);
+        return ResponseUtil.createSuccessResponse("Product retrieved successfully", product);
+    }
+
+    /**
      * Creates a new product.
      *
      * @param request The request payload containing product information

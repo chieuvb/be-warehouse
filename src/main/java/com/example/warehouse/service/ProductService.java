@@ -74,6 +74,20 @@ public class ProductService {
     }
 
     /**
+     * Retrieves a product by its Barcode.
+     *
+     * @param barcode The Barcode of the product to retrieve
+     * @return The product response
+     * @throws ResourceNotFoundException if the product does not exist
+     */
+    @Transactional(readOnly = true)
+    public ProductResponse getProductByBarcode(String barcode) {
+        return productRepository.findByBarcode(barcode)
+                .map(productMapper::toProductResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "barcode", barcode));
+    }
+
+    /**
      * Creates a new product with a unique SKU and Barcode.
      *
      * @param request The product request containing details for the new product
