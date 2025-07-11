@@ -36,6 +36,11 @@ public enum AuditAction {
     UPDATE_ZONE("Update Zone", "Zone details were updated."),
     DELETE_ZONE("Delete Zone", "A warehouse zone was deleted."),
 
+    // Role actions
+    CREATE_ROLE("Create Role", "A new role was created."),
+    UPDATE_ROLE("Update Role", "Role details were updated."),
+    DELETE_ROLE("Delete Role", "A role was deleted."),
+
     OTHER("Other", "An action that does not fit into the predefined categories.");
 
     private final String displayName;
