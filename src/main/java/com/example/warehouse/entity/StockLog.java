@@ -18,7 +18,7 @@ public class StockLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Using Long for log tables is a good practice for scalability
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "inventory_id", nullable = false)

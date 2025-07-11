@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -18,8 +20,7 @@ import java.util.Set;
         // This key ensures one inventory record per product per zone in a warehouse.
         @UniqueConstraint(columnNames = {"product_id", "warehouse_id", "zone_id"}, name = "uk_product_location")
 })
-@ToString(exclude = "stockLogs")
-@EqualsAndHashCode(exclude = "stockLogs")
+@ToString(exclude = {"stockLogs", "product", "warehouse", "zone"})
 public class ProductInventory {
 
     @Id
@@ -53,4 +54,20 @@ public class ProductInventory {
     // Bidirectional relationship to its stock movement history
     @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<StockLog> stockLogs;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        ProductInventory that = (ProductInventory) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
 }
