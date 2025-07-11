@@ -2,6 +2,7 @@ package com.example.warehouse.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
@@ -16,17 +17,17 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class AuditLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // bigint maps to Long
+    private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "action", nullable = false, length = 50)
-    private String action; // e.g., "CREATE", "UPDATE", "DELETE"
+    private String action;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id", referencedColumnName = "id")
@@ -37,12 +38,13 @@ public class AuditLog {
     private String tableAffected;
 
     @Column(name = "object_id", nullable = false, length = 50)
-    private String objectId; // ID of the affected record, stored as String
+    private String objectId;
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
 
     @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Override

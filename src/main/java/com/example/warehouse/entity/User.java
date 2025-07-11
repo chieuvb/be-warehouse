@@ -2,6 +2,8 @@ package com.example.warehouse.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
@@ -18,10 +20,9 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor // Generates getters, setters, toString, equals, and hashCode
-@NoArgsConstructor // Generates a no-argument constructor
-@AllArgsConstructor // Generates a constructor with all fields
-@Builder // Generates a builder pattern for object creation
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,17 +41,16 @@ public class User {
     private String fullName;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive; // tinyint(1) maps to Boolean
+    private Boolean isActive;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    // @CreationTimestamp // Uncomment if using Hibernate and want auto-generation
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    // @UpdateTimestamp // Uncomment if using Hibernate and want auto-update
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    // Many-to-Many relationship with Role through the user_roles join table
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
@@ -58,7 +58,7 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     @Builder.Default
-    @ToString.Exclude // Ensures the set is initialized by default
+    @ToString.Exclude
     private Set<Role> roles = new HashSet<>();
 
     @Override

@@ -2,6 +2,7 @@ package com.example.warehouse.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
@@ -16,14 +17,13 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class StockLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // bigint maps to Long
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_id", nullable = false, referencedColumnName = "id")
@@ -35,8 +35,9 @@ public class StockLog {
     @ToString.Exclude
     private User actor;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
-    private String type; // e.g., "IN", "OUT", "ADJUSTMENT"
+    private String type;
 
     @Column(name = "quantity_before", nullable = false)
     private Integer quantityBefore;
@@ -47,8 +48,9 @@ public class StockLog {
     @Column(name = "quantity_after", nullable = false)
     private Integer quantityAfter;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "reference_type", length = 50)
-    private String referenceType; // e.g., "ORDER", "RECEIPT"
+    private String referenceType;
 
     @Column(name = "reference_id", length = 50)
     private String referenceId;
@@ -57,6 +59,7 @@ public class StockLog {
     private String note;
 
     @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Override
