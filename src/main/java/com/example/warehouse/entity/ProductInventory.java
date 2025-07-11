@@ -2,58 +2,58 @@ package com.example.warehouse.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
-
+import java.util.Set; /**
+ * Represents the inventory quantity of a specific product in a specific warehouse zone.
+ * Corresponds to the `product_inventories` table.
+ */
+@Entity
+@Table(name = "product_inventories")
 @Getter
 @Setter
-@Builder
+@ToString
+@RequiredArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "product_inventories", uniqueConstraints = {
-        // This key ensures one inventory record per product per zone in a warehouse.
-        @UniqueConstraint(columnNames = {"product_id", "warehouse_id", "zone_id"}, name = "uk_product_location")
-})
-@ToString(exclude = {"stockLogs", "product", "warehouse", "zone"})
+@Builder
 public class ProductInventory {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id; // bigint maps to Long
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false, referencedColumnName = "id")
+    @ToString.Exclude
     private Product product;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "warehouse_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id", nullable = false, referencedColumnName = "id")
+    @ToString.Exclude
     private Warehouse warehouse;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "zone_id")
+    @JoinColumn(name = "zone_id", nullable = false, referencedColumnName = "id")
+    @ToString.Exclude
     private WarehouseZone zone;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Integer quantity = 0;
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Bidirectional relationship to its stock movement history
-    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<StockLog> stockLogs;
+    // One-to-Many relationship with StockLog
+    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @ToString.Exclude
+    private Set<StockLog> stockLogs = new HashSet<>();
 
     @Override
     public final boolean equals(Object o) {

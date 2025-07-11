@@ -2,48 +2,52 @@ package com.example.warehouse.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
-
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+import java.util.Set; /**
+ * Represents a Product Category.
+ * Corresponds to the `product_categories` table.
+ */
 @Entity
 @Table(name = "product_categories")
-@ToString(exclude = {"parent", "children", "products"})
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ProductCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // Self-referencing relationship for parent
+    // Self-referencing Many-to-One for the parent category
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private ProductCategory parent;
+    @JoinColumn(name = "parent_id", referencedColumnName = "id")
+    @ToString.Exclude
+    private ProductCategory parentCategory;
 
-    // Self-referencing relationship for children
-    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
-    private Set<ProductCategory> children;
+    // One-to-Many for child categories
+    @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @ToString.Exclude
+    private Set<ProductCategory> childCategories = new HashSet<>();
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Bidirectional relationship to Products
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
-    private Set<Product> products;
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     @Override
     public final boolean equals(Object o) {

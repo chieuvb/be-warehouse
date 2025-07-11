@@ -5,31 +5,30 @@ import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.util.Objects;
-import java.util.Set;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+/**
+ * Represents a Unit of Measure for products.
+ * Corresponds to the `units_of_measure` table.
+ */
 @Entity
 @Table(name = "units_of_measure")
-@ToString(exclude = "products")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UnitOfMeasure {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 50, unique = true)
     private String name;
 
-    @Column(nullable = false, length = 10)
+    @Column(name = "abbreviation", nullable = false, length = 10, unique = true)
     private String abbreviation;
-
-    // The other side of the relationship: one unit can be used by many products
-    @OneToMany(mappedBy = "baseUnit", fetch = FetchType.LAZY)
-    private Set<Product> products;
 
     @Override
     public final boolean equals(Object o) {

@@ -4,38 +4,49 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
-
+import java.util.Set; /**
+ * Represents a Zone within a Warehouse.
+ * Corresponds to the `warehouse_zones` table.
+ */
+@Entity
+@Table(name = "warehouse_zones")
 @Getter
 @Setter
-@Builder
+@ToString
+@RequiredArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "warehouse_zones", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"warehouse_id", "code"}, name = "uk_zone_code")
-})
-@ToString(exclude = {"inventories", "warehouse"})
+@Builder
 public class WarehouseZone {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "warehouse_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id", nullable = false, referencedColumnName = "id")
+    @ToString.Exclude
     private Warehouse warehouse;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "code", nullable = false, length = 50, unique = true)
     private String code;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    // Bidirectional relationship to inventories located in this zone
-    @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
-    private Set<ProductInventory> inventories;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    // One-to-Many relationship with ProductInventory
+    @OneToMany(mappedBy = "zone", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @ToString.Exclude
+    private Set<ProductInventory> productInventories = new HashSet<>();
 
     @Override
     public final boolean equals(Object o) {

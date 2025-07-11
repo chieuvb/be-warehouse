@@ -4,27 +4,34 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
-
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+import java.util.Set; /**
+ * Represents a Role in the Warehouse Management System.
+ * Corresponds to the `roles` table.
+ */
 @Entity
 @Table(name = "roles")
-@ToString(exclude = "users")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 50, unique = true)
     private String name;
 
+    // Many-to-Many relationship with User
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
-    private Set<User> users;
+    @Builder.Default
+    @ToString.Exclude
+    private Set<User> users = new HashSet<>();
 
     @Override
     public final boolean equals(Object o) {
