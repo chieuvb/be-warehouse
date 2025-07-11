@@ -26,7 +26,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
-            @PageableDefault(sort = "username") Pageable pageable) {
+            @PageableDefault(size =8,sort = "fullName") Pageable pageable) {
         Page<UserResponse> users = userService.getAllUsers(pageable);
         return ResponseUtil.createSuccessResponse("Users retrieved successfully", users);
     }

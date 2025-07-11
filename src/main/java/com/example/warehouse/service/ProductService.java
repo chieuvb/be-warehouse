@@ -5,6 +5,7 @@ import com.example.warehouse.entity.ProductCategory;
 import com.example.warehouse.entity.UnitOfMeasure;
 import com.example.warehouse.enums.AuditAction;
 import com.example.warehouse.exception.ResourceNotFoundException;
+import com.example.warehouse.helper.GeneratorService;
 import com.example.warehouse.mapper.ProductMapper;
 import com.example.warehouse.payload.request.ProductRequest;
 import com.example.warehouse.payload.response.ProductResponse;
@@ -31,7 +32,7 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final AuditLogService auditLogService;
     private final SecurityContextService securityContextService;
-    private final SkuGeneratorService skuGeneratorService; // Inject the new service
+    private final GeneratorService skuGeneratorService; // Inject the new service
 
     /**
      * Retrieves all products with pagination support.
