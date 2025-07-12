@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 public enum RoleType {
     ROLE_ADMIN("Admin", "System administrator with full access."),
-    ROLE_WAREHOUSE("Warehouse Staff", "Handles stock in/out and inventory checks."),
+    ROLE_WAREHOUSE_STAFF("Warehouse Staff", "Handles stock in/out and inventory checks."),
     ROLE_WAREHOUSE_MANAGER("Warehouse Manager", "Oversees warehouse operations and approvals."),
     ROLE_SALES("Sales Staff", "Creates sales orders and checks stock availability."),
     ROLE_ACCOUNTANT("Accountant", "Manages financial records related to warehouse operations."),

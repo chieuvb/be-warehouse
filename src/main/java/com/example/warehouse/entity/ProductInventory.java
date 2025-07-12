@@ -16,8 +16,9 @@ import java.util.Set;
  * Corresponds to the `product_inventories` table.
  */
 @Entity
-@Table(name = "product_inventories")
-@Getter
+@Table(name = "product_inventories", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"product_id", "warehouse_id", "zone_id"}, name = "uk_product_location")
+})@Getter
 @Setter
 @ToString
 @NoArgsConstructor
@@ -43,6 +44,7 @@ public class ProductInventory {
     @ToString.Exclude
     private WarehouseZone zone;
 
+    @Builder.Default
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
