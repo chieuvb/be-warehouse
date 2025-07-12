@@ -46,7 +46,7 @@ public class ProductInventory {
 
     @Builder.Default
     @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    private Integer quantity = 0;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
