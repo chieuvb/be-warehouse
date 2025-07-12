@@ -46,6 +46,11 @@ public enum AuditAction {
     UPDATE_UNIT_OF_MEASURE("Update Unit of Measure", "Unit of measure details were updated."),
     DELETE_UNIT_OF_MEASURE("Delete Unit of Measure", "A unit of measure was deleted."),
 
+    // Product Category actions
+    CREATE_PRODUCT_CATEGORY("Create Product Category", "A new product category was created."),
+    UPDATE_PRODUCT_CATEGORY("Update Product Category", "Product category details were updated."),
+    DELETE_PRODUCT_CATEGORY("Delete Product Category", "A product category was deleted."),
+
     OTHER("Other", "An action that does not fit into the predefined categories.");
 
     private final String displayName;
