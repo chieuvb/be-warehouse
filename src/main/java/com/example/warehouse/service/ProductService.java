@@ -4,6 +4,7 @@ import com.example.warehouse.entity.Product;
 import com.example.warehouse.entity.ProductCategory;
 import com.example.warehouse.entity.UnitOfMeasure;
 import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.helper.GeneratorService;
 import com.example.warehouse.mapper.ProductMapper;
@@ -19,8 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service class for managing products in the warehouse management system.
- * This service handles CRUD operations, SKU generation, and auditing actions.
+ * Service class for managing products.
+ * Handles business logic for creating, reading, updating, and deleting products,
+ * including auto-generation of identifiers and audit logging.
  */
 @Service
 @RequiredArgsConstructor
@@ -35,10 +37,9 @@ public class ProductService {
     private final GeneratorService generatorService;
 
     /**
-     * Retrieves all products with pagination support.
-     *
-     * @param pageable Pagination information
-     * @return A paginated list of product responses
+     * Retrieves a paginated list of all products.
+     * @param pageable Pagination and sorting information.
+     * @return A page of ProductResponse objects.
      */
     @Transactional(readOnly = true)
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
@@ -46,11 +47,10 @@ public class ProductService {
     }
 
     /**
-     * Retrieves a product by its ID.
-     *
-     * @param productId The ID of the product to retrieve
-     * @return The product response
-     * @throws ResourceNotFoundException if the product does not exist
+     * Retrieves a single product by its ID.
+     * @param productId The ID of the product to retrieve.
+     * @return The corresponding ProductResponse.
+     * @throws ResourceNotFoundException if no product with the given ID is found.
      */
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Integer productId) {
@@ -60,11 +60,10 @@ public class ProductService {
     }
 
     /**
-     * Retrieves a product by its SKU.
-     *
-     * @param sku The SKU of the product to retrieve
-     * @return The product response
-     * @throws ResourceNotFoundException if the product does not exist
+     * Retrieves a single product by its SKU.
+     * @param sku The SKU of the product to retrieve.
+     * @return The corresponding ProductResponse.
+     * @throws ResourceNotFoundException if no product with the given SKU is found.
      */
     @Transactional(readOnly = true)
     public ProductResponse getProductBySku(String sku) {
@@ -74,11 +73,10 @@ public class ProductService {
     }
 
     /**
-     * Retrieves a product by its Barcode.
-     *
-     * @param barcode The Barcode of the product to retrieve
-     * @return The product response
-     * @throws ResourceNotFoundException if the product does not exist
+     * Retrieves a single product by its barcode.
+     * @param barcode The barcode of the product to retrieve.
+     * @return The corresponding ProductResponse.
+     * @throws ResourceNotFoundException if no product with the given barcode is found.
      */
     @Transactional(readOnly = true)
     public ProductResponse getProductByBarcode(String barcode) {
@@ -88,11 +86,9 @@ public class ProductService {
     }
 
     /**
-     * Creates a new product with a unique SKU and Barcode.
-     *
-     * @param request The product request containing details for the new product
-     * @return The created product response
-     * @throws ResourceNotFoundException if the category or unit of measure does not exist
+     * Creates a new product with an auto-generated SKU and barcode.
+     * @param request The request DTO containing product details.
+     * @return The created ProductResponse.
      */
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
@@ -105,12 +101,12 @@ public class ProductService {
 
         // 2. Generate unique SKU and Barcode
         String generatedSku = generatorService.generateSku(category, request.getName(), unit);
-        String generatedBarcode = generatorService.generateEan13Barcode(); // Generate the barcode
+        String generatedBarcode = generatorService.generateEan13Barcode();
 
         // 3. Build the new product with the generated values
         Product product = Product.builder()
                 .sku(generatedSku)
-                .barcode(generatedBarcode) // Set the generated barcode
+                .barcode(generatedBarcode)
                 .name(request.getName())
                 .description(request.getDescription())
                 .category(category)
@@ -134,12 +130,11 @@ public class ProductService {
     }
 
     /**
-     * Updates an existing product by its ID.
-     *
-     * @param productId The ID of the product to update
-     * @param request   The request payload containing updated product information
-     * @return The updated product response
-     * @throws ResourceNotFoundException if the product does not exist
+     * Updates an existing product.
+     * Note: The SKU and barcode are immutable and will not be changed.
+     * @param productId The ID of the product to update.
+     * @param request The request DTO with the new details.
+     * @return The updated ProductResponse.
      */
     @Transactional
     public ProductResponse updateProduct(Integer productId, ProductRequest request) {
@@ -177,16 +172,22 @@ public class ProductService {
 
     /**
      * Deletes a product by its ID.
-     *
-     * @param productId The ID of the product to delete
-     * @throws ResourceNotFoundException if the product does not exist
+     * This operation is prevented if the product has any existing inventory records.
+     * @param productId The ID of the product to delete.
+     * @throws ResourceConflictException if the product has associated inventory.
      */
     @Transactional
     public void deleteProduct(Integer productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
 
-        productRepository.delete(product);
+        // **Critical Business Rule**: Prevent deletion if the product has inventory.
+        if (!product.getInventories().isEmpty()) {
+            throw new ResourceConflictException(
+                    "Cannot delete product '" + product.getName() + "' because it has " +
+                            product.getInventories().size() + " active inventory record(s)."
+            );
+        }
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
@@ -195,5 +196,7 @@ public class ProductService {
                 productId.toString(),
                 String.format("Deleted product '%s' with SKU '%s'", product.getName(), product.getSku())
         );
+
+        productRepository.delete(product);
     }
 }
