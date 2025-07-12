@@ -1,13 +1,16 @@
 package com.example.warehouse.service;
 
 import com.example.warehouse.entity.Role;
+import com.example.warehouse.entity.User;
 import com.example.warehouse.enums.AuditAction;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.RoleMapper;
+import com.example.warehouse.payload.request.AssignUsersRequest;
 import com.example.warehouse.payload.request.RoleRequest;
 import com.example.warehouse.payload.response.RoleResponse;
 import com.example.warehouse.repository.RoleRepository;
+import com.example.warehouse.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,7 @@ public class RoleService {
     private static final Set<String> PROTECTED_ROLES = Set.of("ROLE_ADMIN", "ROLE_USER");
 
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
     private final RoleMapper roleMapper;
     private final AuditLogService auditLogService;
     private final SecurityContextService securityContextService;
@@ -155,5 +159,71 @@ public class RoleService {
         );
 
         roleRepository.delete(role);
+    }
+
+    /**
+     * Assigns a role to a list of users.
+     *
+     * @param roleId  The ID of the role to assign.
+     * @param request The request containing the list of user IDs.
+     */
+    @Transactional
+    public void assignUsersToRole(Integer roleId, AssignUsersRequest request) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "id", roleId));
+
+        List<User> users = userRepository.findAllById(request.getUserIds());
+
+        if (users.size() != request.getUserIds().size()) {
+            throw new ResourceNotFoundException("One or more users not found.");
+        }
+
+        for (User user : users) {
+            if (user.getRoles().add(role)) { // .add() returns true if the role was not already present
+                auditLogService.logAction(
+                        securityContextService.getCurrentActor(),
+                        AuditAction.ASSIGN_ROLE_TO_USER,
+                        "user_roles",
+                        user.getId().toString(),
+                        String.format("Assigned role '%s' to user '%s'", role.getName(), user.getUsername())
+                );
+            }
+        }
+        // No need to call userRepository.saveAll(users) if User entity owns the relationship
+        // and cascade settings are appropriate. If not, you would save here.
+    }
+
+    /**
+     * Unassigns a role from a single user.
+     * Includes a safeguard to prevent removing the last administrator.
+     *
+     * @param roleId The ID of the role to unassign.
+     * @param userId The ID of the user.
+     */
+    @Transactional
+    public void unassignUserFromRole(Integer roleId, Integer userId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "id", roleId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        // **Critical Safeguard**: Prevent removing the last administrator.
+        if ("ROLE_ADMIN".equals(role.getName())) {
+            long adminCount = role.getUsers().stream().filter(u -> u.getRoles().contains(role)).count();
+            if (adminCount <= 1 && user.getRoles().contains(role)) {
+                throw new ResourceConflictException("Cannot remove the last administrator from the system.");
+            }
+        }
+
+        if (user.getRoles().remove(role)) { // .remove() returns true if the role was present
+            auditLogService.logAction(
+                    securityContextService.getCurrentActor(),
+                    AuditAction.UNASSIGN_ROLE_FROM_USER,
+                    "user_roles",
+                    user.getId().toString(),
+                    String.format("Unassigned role '%s' from user '%s'", role.getName(), user.getUsername())
+            );
+        }
     }
 }

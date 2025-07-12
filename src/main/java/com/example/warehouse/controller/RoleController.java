@@ -1,5 +1,6 @@
 package com.example.warehouse.controller;
 
+import com.example.warehouse.payload.request.AssignUsersRequest;
 import com.example.warehouse.payload.request.RoleRequest;
 import com.example.warehouse.payload.response.ApiResponse;
 import com.example.warehouse.payload.response.RoleResponse;
@@ -88,5 +89,35 @@ public class RoleController {
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Integer id) {
         roleService.deleteRole(id);
         return ResponseUtil.createSuccessResponse("Role deleted successfully", null);
+    }
+
+    /**
+     * Assigns a role to one or more users.
+     *
+     * @param id      The ID of the role to assign.
+     * @param request The request containing a list of user IDs.
+     * @return A response indicating the assignment was successful.
+     */
+    @PostMapping("/{id}/users")
+    public ResponseEntity<ApiResponse<Void>> assignUsersToRole(
+            @PathVariable Integer id,
+            @Valid @RequestBody AssignUsersRequest request) {
+        roleService.assignUsersToRole(id, request);
+        return ResponseUtil.createSuccessResponse("Users assigned to role successfully", null);
+    }
+
+    /**
+     * Unassigns a role from a specific user.
+     *
+     * @param id     The ID of the role to unassign.
+     * @param userId The ID of the user to unassign the role from.
+     * @return A response indicating the unassignment was successful.
+     */
+    @DeleteMapping("/{id}/users/{userId}")
+    public ResponseEntity<ApiResponse<Void>> unassignUserFromRole(
+            @PathVariable("id") Integer id,
+            @PathVariable("userId") Integer userId) {
+        roleService.unassignUserFromRole(id, userId);
+        return ResponseUtil.createSuccessResponse("User unassigned from role successfully", null);
     }
 }
