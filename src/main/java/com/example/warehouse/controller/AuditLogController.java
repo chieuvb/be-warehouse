@@ -29,10 +29,11 @@ public class AuditLogController {
     private final AuditLogService auditLogService;
 
     /**
-     * Retrieves a paginated list of all audit logs.
+     * Retrieves a paginated list of all audit log entries.
+     * This endpoint is restricted to users with the 'ROLE_ADMIN'.
      *
-     * @param pageable Pagination information.
-     * @return A ResponseEntity containing a paginated list of AuditLogResponse DTOs.
+     * @param pageable Pagination information defaults to sorting by creation date descending.
+     * @return A paginated list of audit logs.
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<AuditLogResponse>>> getAllAuditLogs(

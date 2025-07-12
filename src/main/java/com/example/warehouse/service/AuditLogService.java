@@ -3,6 +3,8 @@ package com.example.warehouse.service;
 import com.example.warehouse.entity.AuditLog;
 import com.example.warehouse.entity.User;
 import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.exception.ResourceNotFoundException;
+import com.example.warehouse.mapper.AuditLogMapper;
 import com.example.warehouse.payload.response.AuditLogResponse;
 import com.example.warehouse.repository.AuditLogRepository;
 import com.example.warehouse.repository.UserRepository;
@@ -17,16 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
+    private final AuditLogMapper auditLogMapper;
     private final UserRepository userRepository;
 
     /**
-     * Creates and saves an audit log entry. This is the core method for logging user actions.
+     * Creates and saves an audit log entry. This is the primary method for logging actions.
+     * It's designed to be called from other services (e.g., UserService, ProductService).
      *
      * @param actor         The user who performed the action. Can be null for system actions.
-     * @param action        The type of action performed (e.g., CREATE, UPDATE, DELETE).
+     * @param action        The type of action performed (e.g., CREATE_USER).
      * @param tableAffected The name of the database table that was affected.
      * @param objectId      The ID of the entity that was affected.
-     * @param note          An optional, human-readable note describing the change.
+     * @param note          A descriptive note about the action.
      */
     @Transactional
     public void logAction(User actor, AuditAction action, String tableAffected, String objectId, String note) {
@@ -37,53 +41,32 @@ public class AuditLogService {
                 .objectId(objectId)
                 .note(note)
                 .build();
-
         auditLogRepository.save(auditLog);
     }
 
     /**
      * Retrieves a paginated list of all audit logs.
      *
-     * @param pageable Pagination information.
-     * @return A page of AuditLogResponse DTOs.
+     * @param pageable Pagination and sorting information.
+     * @return A paginated list of audit log responses.
      */
     @Transactional(readOnly = true)
     public Page<AuditLogResponse> getAllAuditLogs(Pageable pageable) {
-        return auditLogRepository.findAll(pageable)
-                .map(this::mapToAuditLogResponse);
+        return auditLogRepository.findAll(pageable).map(auditLogMapper::toResponse);
     }
 
     /**
-     * Retrieves a paginated list of audit logs filtered by the actor.
+     * Retrieves a paginated list of audit logs for a specific user.
      *
-     * @param username    The user whose actions are being queried.
-     * @param pageable Pagination information.
-     * @return A page of AuditLogResponse DTOs for the specified actor.
+     * @param username The user whose audit logs are to be retrieved.
+     * @param pageable Pagination and sorting information.
+     * @return A paginated list of audit log responses for the specified user.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<AuditLogResponse> getAuditLogsByActor(String username, Pageable pageable) {
-        User actor = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        User actor = userRepository.findByUsername(username).orElseThrow(() ->
+                new ResourceNotFoundException("User", "username", username));
 
-        return auditLogRepository.findByActor(actor, pageable)
-                .map(this::mapToAuditLogResponse);
-    }
-
-    /**
-     * Maps an AuditLog entity to an AuditLogResponse DTO.
-     *
-     * @param auditLog The entity to map.
-     * @return The mapped DTO.
-     */
-    private AuditLogResponse mapToAuditLogResponse(AuditLog auditLog) {
-        return AuditLogResponse.builder()
-                .id(auditLog.getId())
-                .action(auditLog.getAction())
-                .actorUsername(auditLog.getActor() != null ? auditLog.getActor().getUsername() : "SYSTEM")
-                .tableAffected(auditLog.getTableAffected())
-                .objectId(auditLog.getObjectId())
-                .note(auditLog.getNote())
-                .createdAt(auditLog.getCreatedAt())
-                .build();
+        return auditLogRepository.findByActor(actor, pageable).map(auditLogMapper::toResponse);
     }
 }
