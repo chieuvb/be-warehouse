@@ -1,6 +1,6 @@
 package com.example.warehouse.entity;
 
-import com.example.warehouse.enums.EReferenceType;
+import com.example.warehouse.enums.ReferenceAction;
 import com.example.warehouse.enums.StockLogType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -52,7 +52,7 @@ public class StockLog {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "reference_type", length = 50)
-    private EReferenceType referenceType;
+    private ReferenceAction referenceType;
 
     @Column(name = "reference_id", length = 50)
     private String referenceId;

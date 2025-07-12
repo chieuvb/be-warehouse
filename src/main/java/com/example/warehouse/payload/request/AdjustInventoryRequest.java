@@ -20,4 +20,7 @@ public class AdjustInventoryRequest {
 
     @NotBlank(message = "A note is required for this adjustment")
     private String note;
+
+    private String referenceType;
+    private String referenceId;
 }

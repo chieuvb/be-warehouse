@@ -1,6 +1,7 @@
 package com.example.warehouse.service;
 
 import com.example.warehouse.entity.*;
+import com.example.warehouse.enums.ReferenceAction;
 import com.example.warehouse.enums.StockLogType;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
@@ -59,7 +60,16 @@ public class ProductInventoryService {
         ProductInventory savedInventory = inventoryRepository.save(inventory);
 
         StockLogType type = request.getQuantityChange() > 0 ? StockLogType.ADJUSTMENT_IN : StockLogType.ADJUSTMENT_OUT;
-        logTransaction(savedInventory, type, request.getQuantityChange(), quantityBefore, request.getNote());
+
+        logTransaction(
+                savedInventory,
+                type,
+                request.getQuantityChange(),
+                quantityBefore,
+                request.getNote(),
+                request.getReferenceType(),
+                request.getReferenceId()
+        );
 
         return inventoryMapper.toResponse(savedInventory);
     }
@@ -90,13 +100,15 @@ public class ProductInventoryService {
         int sourceQtyBefore = sourceInventory.getQuantity();
         sourceInventory.setQuantity(sourceQtyBefore - request.getQuantity());
         inventoryRepository.save(sourceInventory);
-        logTransaction(sourceInventory, StockLogType.GOODS_ISSUE, -request.getQuantity(), sourceQtyBefore, request.getNote());
+        logTransaction(sourceInventory, StockLogType.GOODS_ISSUE, -request.getQuantity(), sourceQtyBefore, request.getNote(),
+                ReferenceAction.SALES_ORDER.toString(), destInventory.getId().toString());
 
         // 4. Perform the move on the destination
         int destQtyBefore = destInventory.getQuantity();
         destInventory.setQuantity(destQtyBefore + request.getQuantity());
         inventoryRepository.save(destInventory);
-        logTransaction(destInventory, StockLogType.GOODS_RECEIPT, request.getQuantity(), destQtyBefore, request.getNote());
+        logTransaction(destInventory, StockLogType.GOODS_RECEIPT, request.getQuantity(), destQtyBefore, request.getNote(),
+                ReferenceAction.PURCHASE_ORDER.toString(), destInventory.getId().toString());
     }
 
     /**
@@ -126,7 +138,14 @@ public class ProductInventoryService {
     /**
      * Creates and saves an immutable StockLog record for any inventory change.
      */
-    private void logTransaction(ProductInventory inventory, StockLogType type, int quantityChange, int quantityBefore, String note) {
+    private void logTransaction(
+            ProductInventory inventory,
+            StockLogType type,
+            int quantityChange,
+            int quantityBefore,
+            String note,
+            String referenceAction,
+            String referenceId) {
         StockLog stockLog = StockLog.builder()
                 .inventory(inventory)
                 .actor(securityContextService.getCurrentActor())
@@ -135,6 +154,8 @@ public class ProductInventoryService {
                 .quantityChange(quantityChange)
                 .quantityAfter(inventory.getQuantity())
                 .note(note)
+                .referenceType(ReferenceAction.valueOf(referenceAction))
+                .referenceId(referenceId)
                 .build();
         stockLogRepository.save(stockLog);
     }

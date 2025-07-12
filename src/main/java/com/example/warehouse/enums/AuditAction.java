@@ -51,6 +51,10 @@ public enum AuditAction {
     UPDATE_PRODUCT_CATEGORY("Update Product Category", "Product category details were updated."),
     DELETE_PRODUCT_CATEGORY("Delete Product Category", "A product category was deleted."),
 
+    // Role Assignment actions
+    ASSIGN_ROLE_TO_USER("Assign Role to User", "A role was assigned to a user."),
+    UNASSIGN_ROLE_FROM_USER("Unassign Role from User", "A role was unassigned from a user."),
+
     OTHER("Other", "An action that does not fit into the predefined categories.");
 
     private final String displayName;
