@@ -30,7 +30,7 @@ public class GeneratorService {
      * @return A unique, formatted SKU string.
      */
     public String generateSku(ProductCategory category, String productName, UnitOfMeasure unit) {
-        String baseSku = createBaseSku(category.getName(), productName, unit.getName());
+        String baseSku = createBaseSku(category.getName(), productName, unit.getAbbreviation());
 
         // Check if the base SKU itself is unique
         if (!productRepository.existsBySku(baseSku)) {

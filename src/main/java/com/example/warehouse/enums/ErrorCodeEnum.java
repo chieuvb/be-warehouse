@@ -1,6 +1,6 @@
 package com.example.warehouse.enums;
 
-public enum ErrorCode {
+public enum ErrorCodeEnum {
 
     // Authentication & Authorization Errors
     AUTH_INVALID_CREDENTIALS,

@@ -1,7 +1,7 @@
 package com.example.warehouse.service;
 
 import com.example.warehouse.entity.UnitOfMeasure;
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.UnitOfMeasureMapper;
@@ -79,7 +79,7 @@ public class UnitOfMeasureService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.CREATE_UNIT_OF_MEASURE,
+                AuditActionEnum.CREATE_UNIT_OF_MEASURE,
                 "units_of_measure",
                 savedUnit.getId().toString(),
                 String.format("Created unit of measure '%s' (%s)", savedUnit.getName(), savedUnit.getAbbreviation())
@@ -122,7 +122,7 @@ public class UnitOfMeasureService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.UPDATE_UNIT_OF_MEASURE,
+                AuditActionEnum.UPDATE_UNIT_OF_MEASURE,
                 "units_of_measure",
                 updatedUnit.getId().toString(),
                 String.format("Updated unit of measure '%s'", updatedUnit.getName())
@@ -153,7 +153,7 @@ public class UnitOfMeasureService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.DELETE_UNIT_OF_MEASURE,
+                AuditActionEnum.DELETE_UNIT_OF_MEASURE,
                 "units_of_measure",
                 unitId.toString(),
                 String.format("Deleted unit of measure '%s'", unit.getName())

@@ -3,7 +3,7 @@ package com.example.warehouse.enums;
 /**
  * Defines the type of source document or entity that a stock transaction is linked to.
  */
-public enum ReferenceAction {
+public enum ReferenceActionEnum {
     /**
      * Linked to a purchase order for incoming goods.
      */

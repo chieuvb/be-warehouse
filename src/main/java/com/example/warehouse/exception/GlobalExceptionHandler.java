@@ -1,6 +1,6 @@
 package com.example.warehouse.exception;
 
-import com.example.warehouse.enums.ErrorCode;
+import com.example.warehouse.enums.ErrorCodeEnum;
 import com.example.warehouse.payload.response.ApiError;
 import com.example.warehouse.payload.response.ApiResponse;
 import com.example.warehouse.utility.ResponseUtil;
@@ -35,20 +35,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({ResourceNotFoundException.class})
     protected ResponseEntity<ApiResponse<Object>> handleResourceNotFound(RuntimeException ex, WebRequest request) {
         log.warn("Resource not found: {}", ex.getMessage());
-        return ResponseUtil.createErrorResponse(HttpStatus.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, ex.getMessage(), getRequestPath(request));
+        return ResponseUtil.createErrorResponse(HttpStatus.NOT_FOUND, ErrorCodeEnum.RESOURCE_NOT_FOUND, ex.getMessage(), getRequestPath(request));
     }
 
     @ExceptionHandler({ResourceConflictException.class})
     protected ResponseEntity<ApiResponse<Object>> handleResourceConflict(RuntimeException ex, WebRequest request) {
         log.warn("Data conflict: {}", ex.getMessage());
-        return ResponseUtil.createErrorResponse(HttpStatus.CONFLICT, ErrorCode.DATA_CONFLICT, ex.getMessage(), getRequestPath(request));
+        return ResponseUtil.createErrorResponse(HttpStatus.CONFLICT, ErrorCodeEnum.DATA_CONFLICT, ex.getMessage(), getRequestPath(request));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
         log.warn("Access Denied: User attempted to access a protected resource. Path: {}", getRequestPath(request));
         String message = "You do not have permission to perform this action.";
-        return ResponseUtil.createErrorResponse(HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN_OPERATION, message, getRequestPath(request));
+        return ResponseUtil.createErrorResponse(HttpStatus.FORBIDDEN, ErrorCodeEnum.FORBIDDEN_OPERATION, message, getRequestPath(request));
     }
 
     /**
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         // Default message for login attempts
         String message = "Invalid username or password.";
-        ErrorCode errorCode = ErrorCode.AUTH_INVALID_CREDENTIALS;
+        ErrorCodeEnum errorCodeEnum = ErrorCodeEnum.AUTH_INVALID_CREDENTIALS;
         HttpStatus status = HttpStatus.UNAUTHORIZED;
 
         // Provide a more specific response if it's a password change attempt
@@ -71,7 +71,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             status = HttpStatus.BAD_REQUEST; // Use 400 for a bad request, not 401
         }
 
-        return ResponseUtil.createErrorResponse(status, errorCode, message, path);
+        return ResponseUtil.createErrorResponse(status, errorCodeEnum, message, path);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("Validation error on path {}: {}", path, validationErrors);
 
         HttpStatus httpStatus = (HttpStatus) status;
-        ApiError apiError = new ApiError(ErrorCode.VALIDATION_FAILED, message, path, validationErrors);
+        ApiError apiError = new ApiError(ErrorCodeEnum.VALIDATION_FAILED, message, path, validationErrors);
         ApiResponse<Object> apiResponse = ApiResponse.error(httpStatus.getReasonPhrase(), apiError);
 
         return new ResponseEntity<>(apiResponse, headers, status);
@@ -103,7 +103,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         String path = getRequestPath(request);
         log.error("An unexpected error occurred on path {}:", path, ex);
         String message = "An unexpected error occurred. Please contact support.";
-        return ResponseUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR, message, path);
+        return ResponseUtil.createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodeEnum.INTERNAL_ERROR, message, path);
     }
 
     private String getRequestPath(WebRequest request) {

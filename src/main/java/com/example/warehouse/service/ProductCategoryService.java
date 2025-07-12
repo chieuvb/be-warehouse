@@ -1,7 +1,7 @@
 package com.example.warehouse.service;
 
 import com.example.warehouse.entity.ProductCategory;
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.ProductCategoryMapper;
@@ -52,7 +52,7 @@ public class ProductCategoryService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.CREATE_PRODUCT_CATEGORY,
+                AuditActionEnum.CREATE_PRODUCT_CATEGORY,
                 "product_categories",
                 savedCategory.getId().toString(),
                 String.format("Created product category '%s'", savedCategory.getName())
@@ -127,7 +127,7 @@ public class ProductCategoryService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.UPDATE_PRODUCT_CATEGORY,
+                AuditActionEnum.UPDATE_PRODUCT_CATEGORY,
                 "product_categories",
                 updatedCategory.getId().toString(),
                 String.format("Updated product category '%s'", updatedCategory.getName())
@@ -155,7 +155,7 @@ public class ProductCategoryService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.DELETE_PRODUCT_CATEGORY,
+                AuditActionEnum.DELETE_PRODUCT_CATEGORY,
                 "product_categories",
                 categoryId.toString(),
                 String.format("Deleted product category '%s'", categoryToDelete.getName())

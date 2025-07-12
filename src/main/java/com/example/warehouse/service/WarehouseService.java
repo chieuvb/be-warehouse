@@ -1,7 +1,7 @@
 package com.example.warehouse.service;
 
 import com.example.warehouse.entity.Warehouse;
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.helper.GeneratorService;
@@ -80,7 +80,7 @@ public class WarehouseService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.CREATE_WAREHOUSE,
+                AuditActionEnum.CREATE_WAREHOUSE,
                 "warehouses",
                 savedWarehouse.getId().toString(),
                 String.format("Created warehouse '%s'", savedWarehouse.getName())
@@ -118,7 +118,7 @@ public class WarehouseService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.UPDATE_WAREHOUSE,
+                AuditActionEnum.UPDATE_WAREHOUSE,
                 "warehouses",
                 updatedWarehouse.getId().toString(),
                 String.format("Updated warehouse '%s'", updatedWarehouse.getName())
@@ -144,7 +144,7 @@ public class WarehouseService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.DELETE_WAREHOUSE,
+                AuditActionEnum.DELETE_WAREHOUSE,
                 "warehouses",
                 warehouseId.toString(),
                 String.format("Deleted warehouse '%s'", warehouse.getName())

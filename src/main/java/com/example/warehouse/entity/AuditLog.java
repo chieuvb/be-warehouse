@@ -1,6 +1,6 @@
 package com.example.warehouse.entity;
 
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,7 +28,7 @@ public class AuditLog {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "action", nullable = false, length = 50)
-    private AuditAction action;
+    private AuditActionEnum action;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id", referencedColumnName = "id")

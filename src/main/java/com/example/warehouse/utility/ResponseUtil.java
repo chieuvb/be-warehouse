@@ -1,6 +1,6 @@
 package com.example.warehouse.utility;
 
-import com.example.warehouse.enums.ErrorCode;
+import com.example.warehouse.enums.ErrorCodeEnum;
 import com.example.warehouse.payload.response.ApiError;
 import com.example.warehouse.payload.response.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -17,14 +17,14 @@ public final class ResponseUtil {
     }
 
     public static ResponseEntity<ApiResponse<Object>> createErrorResponse(
-            HttpStatus status, ErrorCode errorCode, String message, String path, Map<String, String> validationErrors) {
+            HttpStatus status, ErrorCodeEnum errorCodeEnum, String message, String path, Map<String, String> validationErrors) {
 
-        ApiError apiError = new ApiError(errorCode, message, path, validationErrors);
+        ApiError apiError = new ApiError(errorCodeEnum, message, path, validationErrors);
         String title = status.getReasonPhrase(); // e.g., "Not Found", "Conflict"
         return new ResponseEntity<>(ApiResponse.error(title, apiError), status);
     }
 
-    public static ResponseEntity<ApiResponse<Object>> createErrorResponse(HttpStatus status, ErrorCode errorCode, String message, String path) {
-        return createErrorResponse(status, errorCode, message, path, null);
+    public static ResponseEntity<ApiResponse<Object>> createErrorResponse(HttpStatus status, ErrorCodeEnum errorCodeEnum, String message, String path) {
+        return createErrorResponse(status, errorCodeEnum, message, path, null);
     }
 }

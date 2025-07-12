@@ -1,8 +1,8 @@
 package com.example.warehouse.service;
 
 import com.example.warehouse.entity.*;
-import com.example.warehouse.enums.ReferenceAction;
-import com.example.warehouse.enums.StockLogType;
+import com.example.warehouse.enums.ReferenceActionEnum;
+import com.example.warehouse.enums.StockLogEnum;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.ProductInventoryMapper;
@@ -59,7 +59,7 @@ public class ProductInventoryService {
         inventory.setQuantity(newQuantity);
         ProductInventory savedInventory = inventoryRepository.save(inventory);
 
-        StockLogType type = request.getQuantityChange() > 0 ? StockLogType.ADJUSTMENT_IN : StockLogType.ADJUSTMENT_OUT;
+        StockLogEnum type = request.getQuantityChange() > 0 ? StockLogEnum.ADJUSTMENT_IN : StockLogEnum.ADJUSTMENT_OUT;
 
         logTransaction(
                 savedInventory,
@@ -100,15 +100,15 @@ public class ProductInventoryService {
         int sourceQtyBefore = sourceInventory.getQuantity();
         sourceInventory.setQuantity(sourceQtyBefore - request.getQuantity());
         inventoryRepository.save(sourceInventory);
-        logTransaction(sourceInventory, StockLogType.GOODS_ISSUE, -request.getQuantity(), sourceQtyBefore, request.getNote(),
-                ReferenceAction.SALES_ORDER.toString(), destInventory.getId().toString());
+        logTransaction(sourceInventory, StockLogEnum.GOODS_ISSUE, -request.getQuantity(), sourceQtyBefore, request.getNote(),
+                ReferenceActionEnum.SALES_ORDER.toString(), destInventory.getId().toString());
 
         // 4. Perform the move on the destination
         int destQtyBefore = destInventory.getQuantity();
         destInventory.setQuantity(destQtyBefore + request.getQuantity());
         inventoryRepository.save(destInventory);
-        logTransaction(destInventory, StockLogType.GOODS_RECEIPT, request.getQuantity(), destQtyBefore, request.getNote(),
-                ReferenceAction.PURCHASE_ORDER.toString(), destInventory.getId().toString());
+        logTransaction(destInventory, StockLogEnum.GOODS_RECEIPT, request.getQuantity(), destQtyBefore, request.getNote(),
+                ReferenceActionEnum.PURCHASE_ORDER.toString(), destInventory.getId().toString());
     }
 
     /**
@@ -140,7 +140,7 @@ public class ProductInventoryService {
      */
     private void logTransaction(
             ProductInventory inventory,
-            StockLogType type,
+            StockLogEnum type,
             int quantityChange,
             int quantityBefore,
             String note,
@@ -154,7 +154,7 @@ public class ProductInventoryService {
                 .quantityChange(quantityChange)
                 .quantityAfter(inventory.getQuantity())
                 .note(note)
-                .referenceType(ReferenceAction.valueOf(referenceAction))
+                .referenceType(ReferenceActionEnum.valueOf(referenceAction))
                 .referenceId(referenceId)
                 .build();
         stockLogRepository.save(stockLog);

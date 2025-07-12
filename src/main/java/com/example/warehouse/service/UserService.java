@@ -2,7 +2,7 @@ package com.example.warehouse.service;
 
 import com.example.warehouse.entity.Role;
 import com.example.warehouse.entity.User;
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.UserMapper;
@@ -88,7 +88,7 @@ public class UserService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.CREATE_USER,
+                AuditActionEnum.CREATE_USER,
                 "users",
                 savedUser.getId().toString(),
                 String.format("Created user '%s'", savedUser.getUsername())
@@ -126,7 +126,7 @@ public class UserService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.UPDATE_USER,
+                AuditActionEnum.UPDATE_USER,
                 "users",
                 updatedUser.getId().toString(),
                 String.format("Updated user details for '%s'", updatedUser.getUsername())
@@ -158,7 +158,7 @@ public class UserService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.UPDATE_USER, // Can be a more specific action if you add one
+                AuditActionEnum.UPDATE_USER, // Can be a more specific action if you add one
                 "user_roles",
                 user.getId().toString(),
                 String.format("Updated roles for user '%s'", user.getUsername())
@@ -190,7 +190,7 @@ public class UserService {
         // Log the password change action
         auditLogService.logAction(
                 user, // In this case, the actor IS the user being changed
-                AuditAction.CHANGE_PASSWORD,
+                AuditActionEnum.CHANGE_PASSWORD,
                 "users",
                 user.getId().toString(),
                 String.format("User '%s' changed their own password.", user.getUsername())
@@ -222,7 +222,7 @@ public class UserService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.DELETE_USER,
+                AuditActionEnum.DELETE_USER,
                 "users",
                 userId.toString(),
                 String.format("Deleted user '%s'", user.getUsername())

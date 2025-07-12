@@ -1,6 +1,6 @@
 package com.example.warehouse.payload.response;
 
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class AuditLogResponse {
     private Long id;
-    private AuditAction action;
+    private AuditActionEnum action;
     private String actorUsername;
     private String tableAffected;
     private String objectId;

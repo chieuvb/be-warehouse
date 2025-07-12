@@ -7,7 +7,7 @@ import lombok.Getter;
  * Each type corresponds to a specific stock operation that can be logged.
  */
 @Getter
-public enum StockLogType {
+public enum StockLogEnum {
     INITIAL_STOCK("Initial Stock", "Initial stock quantity set up for a new product."),
     GOODS_RECEIPT("Goods Receipt", "Stock increase from a purchase order or transfer in."),
     GOODS_ISSUE("Goods Issue", "Stock decrease from a sales order or transfer out."),
@@ -23,7 +23,7 @@ public enum StockLogType {
     private final String displayName;
     private final String description;
 
-    StockLogType(String displayName, String description) {
+    StockLogEnum(String displayName, String description) {
         this.displayName = displayName;
         this.description = description;
     }

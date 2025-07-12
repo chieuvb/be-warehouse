@@ -1,7 +1,7 @@
 package com.example.warehouse.entity;
 
-import com.example.warehouse.enums.ReferenceAction;
-import com.example.warehouse.enums.StockLogType;
+import com.example.warehouse.enums.ReferenceActionEnum;
+import com.example.warehouse.enums.StockLogEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -39,7 +39,7 @@ public class StockLog {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
-    private StockLogType type;
+    private StockLogEnum type;
 
     @Column(name = "quantity_before", nullable = false)
     private Integer quantityBefore;
@@ -52,7 +52,7 @@ public class StockLog {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "reference_type", length = 50)
-    private ReferenceAction referenceType;
+    private ReferenceActionEnum referenceType;
 
     @Column(name = "reference_id", length = 50)
     private String referenceId;

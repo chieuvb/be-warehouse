@@ -2,7 +2,7 @@ package com.example.warehouse.service;
 
 import com.example.warehouse.entity.AuditLog;
 import com.example.warehouse.entity.User;
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.AuditLogMapper;
 import com.example.warehouse.payload.response.AuditLogResponse;
@@ -33,7 +33,7 @@ public class AuditLogService {
      * @param note          A descriptive note about the action.
      */
     @Transactional
-    public void logAction(User actor, AuditAction action, String tableAffected, String objectId, String note) {
+    public void logAction(User actor, AuditActionEnum action, String tableAffected, String objectId, String note) {
         AuditLog auditLog = AuditLog.builder()
                 .actor(actor)
                 .action(action)

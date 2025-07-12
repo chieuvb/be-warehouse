@@ -1,6 +1,6 @@
 package com.example.warehouse.payload.response;
 
-import com.example.warehouse.enums.StockLogType;
+import com.example.warehouse.enums.StockLogEnum;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class StockLogResponse {
     private Long id;
-    private StockLogType transactionType;
+    private StockLogEnum transactionType;
     private String productSku;
     private String warehouseName;
     private String zoneName;

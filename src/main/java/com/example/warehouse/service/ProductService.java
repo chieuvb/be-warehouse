@@ -3,7 +3,7 @@ package com.example.warehouse.service;
 import com.example.warehouse.entity.Product;
 import com.example.warehouse.entity.ProductCategory;
 import com.example.warehouse.entity.UnitOfMeasure;
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.helper.GeneratorService;
@@ -120,7 +120,7 @@ public class ProductService {
         // 4. Log the creation event
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.CREATE_PRODUCT,
+                AuditActionEnum.CREATE_PRODUCT,
                 "products",
                 savedProduct.getId().toString(),
                 String.format("Created product '%s' with SKU '%s'", savedProduct.getName(), savedProduct.getSku())
@@ -161,7 +161,7 @@ public class ProductService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.UPDATE_PRODUCT,
+                AuditActionEnum.UPDATE_PRODUCT,
                 "products",
                 updatedProduct.getId().toString(),
                 String.format("Updated product '%s'", updatedProduct.getName())
@@ -191,7 +191,7 @@ public class ProductService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.DELETE_PRODUCT,
+                AuditActionEnum.DELETE_PRODUCT,
                 "products",
                 productId.toString(),
                 String.format("Deleted product '%s' with SKU '%s'", product.getName(), product.getSku())

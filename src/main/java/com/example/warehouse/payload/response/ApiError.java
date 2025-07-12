@@ -1,6 +1,6 @@
 package com.example.warehouse.payload.response;
 
-import com.example.warehouse.enums.ErrorCode;
+import com.example.warehouse.enums.ErrorCodeEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
@@ -16,7 +16,7 @@ public class ApiError {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private final LocalDateTime timestamp;
-    private final ErrorCode errorCode;
+    private final ErrorCodeEnum errorCodeEnum;
     private final String message; // The detailed, human-readable error message
     private final String path;
     private Map<String, String> validationErrors;
@@ -24,9 +24,9 @@ public class ApiError {
     /**
      * Main constructor for API errors.
      */
-    public ApiError(ErrorCode errorCode, String message, String path) {
+    public ApiError(ErrorCodeEnum errorCodeEnum, String message, String path) {
         this.timestamp = LocalDateTime.now();
-        this.errorCode = errorCode;
+        this.errorCodeEnum = errorCodeEnum;
         this.message = message;
         this.path = path;
     }
@@ -34,8 +34,8 @@ public class ApiError {
     /**
      * Constructor for API errors that include validation failures.
      */
-    public ApiError(ErrorCode errorCode, String message, String path, Map<String, String> validationErrors) {
-        this(errorCode, message, path);
+    public ApiError(ErrorCodeEnum errorCodeEnum, String message, String path, Map<String, String> validationErrors) {
+        this(errorCodeEnum, message, path);
         this.validationErrors = validationErrors;
     }
 }

@@ -7,7 +7,7 @@ import lombok.Getter;
  * Each action corresponds to a specific operation that can be audited.
  */
 @Getter
-public enum AuditAction {
+public enum AuditActionEnum {
     // User actions
     CREATE_USER("Create User", "A new user account was created."),
     UPDATE_USER("Update User", "User details were updated."),
@@ -60,7 +60,7 @@ public enum AuditAction {
     private final String displayName;
     private final String description;
 
-    AuditAction(String displayName, String description) {
+    AuditActionEnum(String displayName, String description) {
         this.displayName = displayName;
         this.description = description;
     }

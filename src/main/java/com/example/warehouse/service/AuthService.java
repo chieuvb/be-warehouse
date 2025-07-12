@@ -2,7 +2,7 @@ package com.example.warehouse.service;
 
 import com.example.warehouse.entity.Role;
 import com.example.warehouse.entity.User;
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.payload.request.LoginRequest;
@@ -54,7 +54,7 @@ public class AuthService {
         // 4. Log the successful login action
         auditLogService.logAction(
                 securityUser.user(), // Get the actor directly from the principal
-                AuditAction.USER_LOGIN_SUCCESS,
+                AuditActionEnum.USER_LOGIN_SUCCESS,
                 "users",
                 securityUser.user().getId().toString(),
                 "User logged in successfully."
@@ -91,7 +91,7 @@ public class AuthService {
         // 4. Log the registration action
         auditLogService.logAction(
                 savedUser, // The actor is the newly created user
-                AuditAction.CREATE_USER,
+                AuditActionEnum.CREATE_USER,
                 "users",
                 savedUser.getId().toString(),
                 "New user registered."

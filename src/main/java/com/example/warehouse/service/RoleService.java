@@ -2,7 +2,7 @@ package com.example.warehouse.service;
 
 import com.example.warehouse.entity.Role;
 import com.example.warehouse.entity.User;
-import com.example.warehouse.enums.AuditAction;
+import com.example.warehouse.enums.AuditActionEnum;
 import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.RoleMapper;
@@ -82,7 +82,7 @@ public class RoleService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.CREATE_ROLE,
+                AuditActionEnum.CREATE_ROLE,
                 "roles",
                 savedRole.getId().toString(),
                 String.format("Created role '%s'", savedRole.getName())
@@ -120,7 +120,7 @@ public class RoleService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.UPDATE_ROLE,
+                AuditActionEnum.UPDATE_ROLE,
                 "roles",
                 updatedRole.getId().toString(),
                 String.format("Updated role name to '%s'", updatedRole.getName())
@@ -152,7 +152,7 @@ public class RoleService {
 
         auditLogService.logAction(
                 securityContextService.getCurrentActor(),
-                AuditAction.DELETE_ROLE,
+                AuditActionEnum.DELETE_ROLE,
                 "roles",
                 roleId.toString(),
                 String.format("Deleted role '%s'", role.getName())
@@ -182,7 +182,7 @@ public class RoleService {
             if (user.getRoles().add(role)) { // .add() returns true if the role was not already present
                 auditLogService.logAction(
                         securityContextService.getCurrentActor(),
-                        AuditAction.ASSIGN_ROLE_TO_USER,
+                        AuditActionEnum.ASSIGN_ROLE_TO_USER,
                         "user_roles",
                         user.getId().toString(),
                         String.format("Assigned role '%s' to user '%s'", role.getName(), user.getUsername())
@@ -219,7 +219,7 @@ public class RoleService {
         if (user.getRoles().remove(role)) { // .remove() returns true if the role was present
             auditLogService.logAction(
                     securityContextService.getCurrentActor(),
-                    AuditAction.UNASSIGN_ROLE_FROM_USER,
+                    AuditActionEnum.UNASSIGN_ROLE_FROM_USER,
                     "user_roles",
                     user.getId().toString(),
                     String.format("Unassigned role '%s' from user '%s'", role.getName(), user.getUsername())
