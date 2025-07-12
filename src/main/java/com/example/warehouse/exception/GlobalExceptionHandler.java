@@ -45,7 +45,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(WebRequest request) {
         log.warn("Access Denied: User attempted to access a protected resource. Path: {}", getRequestPath(request));
         String message = "You do not have permission to perform this action.";
         return ResponseUtil.createErrorResponse(HttpStatus.FORBIDDEN, ErrorCodeEnum.FORBIDDEN_OPERATION, message, getRequestPath(request));
