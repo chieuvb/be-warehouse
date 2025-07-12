@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Represents a Unit of Measure for products.
@@ -28,6 +30,17 @@ public class UnitOfMeasure {
 
     @Column(name = "abbreviation", nullable = false, length = 10, unique = true)
     private String abbreviation;
+
+    /**
+     * A set of all products that use this unit of measure as their base unit.
+     * This is the inverse side of the relationship defined in the Product entity.
+     * It's primarily used for validation, such as preventing the deletion of a
+     * unit of measure that is currently in use.
+     */
+    @OneToMany(mappedBy = "baseUnit", fetch = FetchType.LAZY)
+    @Builder.Default
+    @ToString.Exclude
+    private Set<Product> products = new HashSet<>();
 
     @Override
     public final boolean equals(Object o) {

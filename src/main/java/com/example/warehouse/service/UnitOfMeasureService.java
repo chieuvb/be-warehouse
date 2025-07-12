@@ -143,7 +143,7 @@ public class UnitOfMeasureService {
         UnitOfMeasure unit = unitRepository.findById(unitId)
                 .orElseThrow(() -> new ResourceNotFoundException("UnitOfMeasure", "id", unitId));
 
-        // **Critical Business Rule**: Prevent deletion if the unit is in use.
+        // **Critical Business Rule**: This check now works correctly because of the entity update.
         if (!unit.getProducts().isEmpty()) {
             throw new ResourceConflictException(
                     "Cannot delete unit '" + unit.getName() + "' because it is assigned to " +
