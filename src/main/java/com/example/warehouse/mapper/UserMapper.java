@@ -3,11 +3,13 @@ package com.example.warehouse.mapper;
 import com.example.warehouse.entity.Role;
 import com.example.warehouse.entity.User;
 import com.example.warehouse.payload.response.UserResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class UserMapper {
 
     public UserResponse toUserResponse(User user) {
@@ -21,7 +23,9 @@ public class UserMapper {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .isActive(user.getIsActive())
-                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
+                .roles(user.getRoles().stream()
+                        .map(Role::getName)
+                        .collect(Collectors.toSet()))
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

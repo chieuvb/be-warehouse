@@ -7,6 +7,7 @@ import com.example.warehouse.exception.ResourceConflictException;
 import com.example.warehouse.exception.ResourceNotFoundException;
 import com.example.warehouse.mapper.UserMapper;
 import com.example.warehouse.payload.request.ChangePasswordRequest;
+import com.example.warehouse.payload.request.UpdateUserRolesRequest;
 import com.example.warehouse.payload.request.UserCreateRequest;
 import com.example.warehouse.payload.request.UserUpdateRequest;
 import com.example.warehouse.payload.response.UserResponse;
@@ -23,61 +24,45 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Service class for managing users, including CRUD operations and password management.
- * It uses repositories for data access and a mapper for DTO conversions.
- */
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
     private final SecurityContextService securityContextService;
 
-
-    /**
-     * Retrieves all users and maps them to a paginated response DTO.
-     *
-     * @param pageable Pagination information.
-     * @return A paginated list of UserResponse DTOs.
-     */
     @Transactional(readOnly = true)
     public Page<UserResponse> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable).map(userMapper::toUserResponse);
     }
 
-    /**
-     * Retrieves a user by their ID and maps them to a response DTO.
-     *
-     * @param userId The ID of the user to retrieve.
-     * @return A UserResponse DTO of the found user.
-     * @throws ResourceNotFoundException if no user is found with the given ID.
-     */
     @Transactional(readOnly = true)
     public UserResponse getUserById(Integer userId) {
-        User user = userRepository.findById(userId)
+        return userRepository.findById(userId)
+                .map(userMapper::toUserResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-        return userMapper.toUserResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(userMapper::toUserResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
     }
 
     /**
-     * Finds a user by their username and maps them to a response DTO.
+     * Creates a new user with the provided details.
+     * <p>
+     * **Critical Safeguard**: Ensures that the username and email are unique.
      *
-     * @param username The username to search for.
-     * @return A UserResponse DTO of the found user.
-     * @throws ResourceNotFoundException if no user is found with the given username.
+     * @param request The request containing user details.
+     * @return The created UserResponse.
+     * @throws ResourceConflictException if the username or email already exists.
      */
-    @Transactional(readOnly = true)
-    public UserResponse getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        return userMapper.toUserResponse(user);
-    }
-
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -87,7 +72,8 @@ public class UserService {
             throw new ResourceConflictException("User", "email", request.getEmail());
         }
 
-        Set<Role> roles = findRoles(request.getRoles());
+        Role defaultRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new ResourceNotFoundException("Default role 'ROLE_USER' not found."));
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -95,76 +81,100 @@ public class UserService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .isActive(true)
-                .roles(roles)
+                .roles(Set.of(defaultRole))
                 .build();
 
         User savedUser = userRepository.save(user);
-        User actor = securityContextService.getCurrentActor(); // Get the logged-in user who is performing the action
 
-        // Log the user creation action
         auditLogService.logAction(
-                actor, // The actor is the admin who performed the action
+                securityContextService.getCurrentActor(),
                 AuditAction.CREATE_USER,
                 "users",
                 savedUser.getId().toString(),
-                String.format("User '%s' created new user '%s'", actor != null ? actor.getUsername() : "SYSTEM", savedUser.getUsername())
+                String.format("Created user '%s'", savedUser.getUsername())
         );
 
         return userMapper.toUserResponse(savedUser);
     }
 
+    /**
+     * Updates an existing user's details.
+     * <p>
+     * **Critical Safeguard**: Checks for email conflict if the email is being changed.
+     *
+     * @param userId The ID of the user to update.
+     * @param request The request containing updated user details.
+     * @return The updated UserResponse.
+     * @throws ResourceNotFoundException if the user does not exist.
+     * @throws ResourceConflictException if the new email already exists.
+     */
     @Transactional
     public UserResponse updateUser(Integer userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        userRepository.findByEmail(request.getEmail()).ifPresent(existingUser -> {
-            if (!existingUser.getId().equals(userId)) {
-                throw new ResourceConflictException("User", "email", request.getEmail());
-            }
-        });
-
-        Set<Role> roles = findRoles(request.getRoles());
+        // Check for email conflict if the email is being changed
+        if (!user.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
+            throw new ResourceConflictException("User", "email", request.getEmail());
+        }
 
         user.setEmail(request.getEmail());
         user.setFullName(request.getFullName());
         user.setIsActive(request.getIsActive());
-        user.setRoles(roles);
 
         User updatedUser = userRepository.save(user);
-        User actor = securityContextService.getCurrentActor(); // Get the logged-in user who is performing the action
 
-        // Log the user update action
         auditLogService.logAction(
-                actor, // The actor is the admin who performed the action
+                securityContextService.getCurrentActor(),
                 AuditAction.UPDATE_USER,
                 "users",
                 updatedUser.getId().toString(),
-                String.format("User '%s' updated user '%s'", actor != null ? actor.getUsername() : "SYSTEM", updatedUser.getUsername())
+                String.format("Updated user details for '%s'", updatedUser.getUsername())
         );
 
         return userMapper.toUserResponse(updatedUser);
     }
 
+    /** Updates the roles of a user.
+     * <p>
+     * **Critical Safeguard**: Prevents assigning roles that do not exist.
+     *
+     * @param userId The ID of the user whose roles are to be updated.
+     * @param request The request containing the new role IDs.
+     * @throws ResourceNotFoundException if the user or any role does not exist.
+     */
     @Transactional
-    public void deleteUser(Integer userId) {
-        User userToDelete = userRepository.findById(userId)
+    public void updateUserRoles(Integer userId, UpdateUserRolesRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        User actor = securityContextService.getCurrentActor(); // Get the actor before deleting the user
+        Set<Role> newRoles = new HashSet<>(roleRepository.findAllById(request.getRoleIds()));
+        if (newRoles.size() != request.getRoleIds().size()) {
+            throw new ResourceNotFoundException("One or more roles not found.");
+        }
 
-        // Log the user deletion action
+        user.setRoles(newRoles);
+        userRepository.save(user);
+
         auditLogService.logAction(
-                actor, // The actor is the admin who performed the action
-                AuditAction.DELETE_USER,
-                "users",
-                userId.toString(),
-                String.format("User '%s' deleted user '%s'", actor != null ? actor.getUsername() : "SYSTEM", userToDelete.getUsername())
+                securityContextService.getCurrentActor(),
+                AuditAction.UPDATE_USER, // Can be a more specific action if you add one
+                "user_roles",
+                user.getId().toString(),
+                String.format("Updated roles for user '%s'", user.getUsername())
         );
-
-        userRepository.delete(userToDelete);
     }
 
+    /**
+     * Changes the password for a user.
+     * <p>
+     * **Critical Safeguard**: Validates the current password before allowing a change.
+     *
+     * @param username The username of the user whose password is to be changed.
+     * @param request The request containing the current and new passwords.
+     * @throws ResourceNotFoundException if the user does not exist.
+     * @throws BadCredentialsException if the current password is incorrect.
+     */
     @Transactional
     public void changePassword(String username, ChangePasswordRequest request) {
         User user = userRepository.findByUsername(username)
@@ -187,13 +197,37 @@ public class UserService {
         );
     }
 
-    private Set<Role> findRoles(Set<String> roleNames) {
-        Set<Role> roles = new HashSet<>();
-        for (String roleName : roleNames) {
-            Role role = roleRepository.findByName(roleName)
-                    .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleName));
-            roles.add(role);
+    /**
+     * Deletes a user by their ID.
+     * <p>
+     * **Critical Safeguard**: Prevents deletion of the last admin user.
+     *
+     * @param userId The ID of the user to delete.
+     * @throws ResourceNotFoundException if the user does not exist.
+     * @throws ResourceConflictException if attempting to delete the last admin user.
+     */
+    @Transactional
+    public void deleteUser(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        // **Critical Safeguard**: Prevent deletion of the last admin user.
+        boolean isDeletingAdmin = user.getRoles().stream().anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
+        if (isDeletingAdmin) {
+            long adminCount = userRepository.countByRoles_Name("ROLE_ADMIN");
+            if (adminCount <= 1) {
+                throw new ResourceConflictException("Cannot delete the last administrator account.");
+            }
         }
-        return roles;
+
+        auditLogService.logAction(
+                securityContextService.getCurrentActor(),
+                AuditAction.DELETE_USER,
+                "users",
+                userId.toString(),
+                String.format("Deleted user '%s'", user.getUsername())
+        );
+
+        userRepository.delete(user);
     }
 }
