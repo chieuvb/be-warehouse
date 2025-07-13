@@ -10,6 +10,7 @@ import com.example.warehouse.payload.request.WarehouseRequest;
 import com.example.warehouse.payload.response.WarehouseResponse;
 import com.example.warehouse.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class WarehouseService {
 
     private final WarehouseRepository warehouseRepository;
@@ -37,6 +39,7 @@ public class WarehouseService {
      */
     @Transactional(readOnly = true)
     public Page<WarehouseResponse> getAllWarehouses(Pageable pageable) {
+        log.info("Retrieving all warehouses with pagination: {}", pageable);
         return warehouseRepository.findAll(pageable).map(warehouseMapper::toWarehouseResponse);
     }
 
@@ -49,6 +52,7 @@ public class WarehouseService {
      */
     @Transactional(readOnly = true)
     public WarehouseResponse getWarehouseById(Integer warehouseId) {
+        log.info("Retrieving warehouse by ID: {}", warehouseId);
         return warehouseRepository.findById(warehouseId)
                 .map(warehouseMapper::toWarehouseResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", warehouseId));
@@ -86,6 +90,7 @@ public class WarehouseService {
                 String.format("Created warehouse '%s'", savedWarehouse.getName())
         );
 
+        log.info("Warehouse created: {}", savedWarehouse.getName());
         return warehouseMapper.toWarehouseResponse(savedWarehouse);
     }
 
@@ -124,6 +129,7 @@ public class WarehouseService {
                 String.format("Updated warehouse '%s'", updatedWarehouse.getName())
         );
 
+        log.info("Warehouse updated: {}", updatedWarehouse.getName());
         return warehouseMapper.toWarehouseResponse(updatedWarehouse);
     }
 
@@ -150,6 +156,7 @@ public class WarehouseService {
                 String.format("Deleted warehouse '%s'", warehouse.getName())
         );
 
+        log.info("Warehouse deleted: {}", warehouse.getName());
         warehouseRepository.delete(warehouse);
     }
 }

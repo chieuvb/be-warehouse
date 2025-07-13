@@ -13,6 +13,7 @@ import com.example.warehouse.repository.UserRepository;
 import com.example.warehouse.security.JwtService;
 import com.example.warehouse.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
@@ -60,6 +62,7 @@ public class AuthService {
                 "User logged in successfully."
         );
 
+        log.info("User {} logged in successfully", securityUser.getUsername());
         return new AuthResponse(jwtToken);
     }
 
@@ -107,6 +110,8 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwtToken = jwtService.generateToken(securityUser);
+
+        log.info("User {} registered successfully", savedUser.getUsername());
         return new AuthResponse(jwtToken);
     }
 }

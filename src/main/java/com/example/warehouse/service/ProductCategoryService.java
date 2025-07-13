@@ -10,6 +10,7 @@ import com.example.warehouse.payload.response.ProductCategoryResponse;
 import com.example.warehouse.repository.ProductCategoryRepository;
 import com.example.warehouse.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductCategoryService {
 
     private final ProductCategoryRepository categoryRepository;
@@ -58,6 +60,7 @@ public class ProductCategoryService {
                 String.format("Created product category '%s'", savedCategory.getName())
         );
 
+        log.info("Category created: {}", savedCategory.getName());
         return categoryMapper.toResponse(savedCategory);
     }
 
@@ -69,6 +72,8 @@ public class ProductCategoryService {
     @Transactional(readOnly = true)
     public List<ProductCategoryResponse> getCategoryTree() {
         List<ProductCategory> rootCategories = categoryRepository.findByParentCategoryIsNull();
+
+        log.info("Retrieving category tree");
         return rootCategories.stream()
                 .map(categoryMapper::toResponse)
                 .collect(Collectors.toList());
@@ -82,6 +87,7 @@ public class ProductCategoryService {
      */
     @Transactional(readOnly = true)
     public ProductCategoryResponse getCategoryById(Integer categoryId) {
+        log.info("Retrieving category by ID: {}", categoryId);
         return categoryRepository.findById(categoryId)
                 .map(categoryMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("ProductCategory", "id", categoryId));
@@ -97,6 +103,8 @@ public class ProductCategoryService {
     public ProductCategoryResponse getCategoryByName(String name) {
         ProductCategory category = categoryRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("ProductCategory", "name", name));
+
+        log.info("Retrieving category by name: {}", name);
         return categoryMapper.toResponse(category);
     }
 
@@ -133,6 +141,7 @@ public class ProductCategoryService {
                 String.format("Updated product category '%s'", updatedCategory.getName())
         );
 
+        log.info("Category updated: {}", updatedCategory.getName());
         return categoryMapper.toResponse(updatedCategory);
     }
 
@@ -161,6 +170,7 @@ public class ProductCategoryService {
                 String.format("Deleted product category '%s'", categoryToDelete.getName())
         );
 
+        log.info("Deleting category: {}", categoryToDelete.getName());
         categoryRepository.delete(categoryToDelete);
     }
 
@@ -174,6 +184,8 @@ public class ProductCategoryService {
         if (parentId == null) {
             return null;
         }
+
+        log.info("Retrieving parent category by ID: {}", parentId);
         return categoryRepository.findById(parentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Parent Category", "id", parentId));
     }

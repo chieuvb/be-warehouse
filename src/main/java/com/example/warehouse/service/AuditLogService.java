@@ -9,6 +9,7 @@ import com.example.warehouse.payload.response.AuditLogResponse;
 import com.example.warehouse.repository.AuditLogRepository;
 import com.example.warehouse.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
@@ -42,6 +44,8 @@ public class AuditLogService {
                 .note(note)
                 .build();
         auditLogRepository.save(auditLog);
+
+        log.info("Audit log created: {}", auditLog.getAction());
     }
 
     /**
@@ -52,6 +56,7 @@ public class AuditLogService {
      */
     @Transactional(readOnly = true)
     public Page<AuditLogResponse> getAllAuditLogs(Pageable pageable) {
+        log.info("Retrieving all audit logs");
         return auditLogRepository.findAll(pageable).map(auditLogMapper::toResponse);
     }
 
@@ -67,6 +72,7 @@ public class AuditLogService {
         User actor = userRepository.findByUsername(username).orElseThrow(() ->
                 new ResourceNotFoundException("User", "username", username));
 
+        log.info("Retrieving audit logs for user: {}", username);
         return auditLogRepository.findByActor(actor, pageable).map(auditLogMapper::toResponse);
     }
 }

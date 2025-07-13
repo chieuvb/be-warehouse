@@ -9,6 +9,7 @@ import com.example.warehouse.payload.request.UnitOfMeasureRequest;
 import com.example.warehouse.payload.response.UnitOfMeasureResponse;
 import com.example.warehouse.repository.UnitOfMeasureRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UnitOfMeasureService {
 
     private final UnitOfMeasureRepository unitRepository;
@@ -35,6 +37,7 @@ public class UnitOfMeasureService {
      */
     @Transactional(readOnly = true)
     public List<UnitOfMeasureResponse> getAllUnits() {
+        log.info("Retrieving all units of measure from the repository");
         return unitRepository.findAll().stream()
                 .map(unitMapper::toUnitOfMeasureResponse)
                 .collect(Collectors.toList());
@@ -49,6 +52,7 @@ public class UnitOfMeasureService {
      */
     @Transactional(readOnly = true)
     public UnitOfMeasureResponse getUnitById(Integer unitId) {
+        log.info("Retrieving unit of measure by ID: {}", unitId);
         return unitRepository.findById(unitId)
                 .map(unitMapper::toUnitOfMeasureResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("UnitOfMeasure", "id", unitId));
@@ -85,6 +89,7 @@ public class UnitOfMeasureService {
                 String.format("Created unit of measure '%s' (%s)", savedUnit.getName(), savedUnit.getAbbreviation())
         );
 
+        log.info("Unit of measure created: {}", savedUnit.getName());
         return unitMapper.toUnitOfMeasureResponse(savedUnit);
     }
 
@@ -128,6 +133,7 @@ public class UnitOfMeasureService {
                 String.format("Updated unit of measure '%s'", updatedUnit.getName())
         );
 
+        log.info("Unit of measure updated: {}", updatedUnit.getName());
         return unitMapper.toUnitOfMeasureResponse(updatedUnit);
     }
 
@@ -159,6 +165,7 @@ public class UnitOfMeasureService {
                 String.format("Deleted unit of measure '%s'", unit.getName())
         );
 
+        log.info("Deleting unit of measure: {}", unit.getName());
         unitRepository.delete(unit);
     }
 }

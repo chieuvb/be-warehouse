@@ -12,6 +12,7 @@ import com.example.warehouse.payload.response.WarehouseZoneResponse;
 import com.example.warehouse.repository.WarehouseRepository;
 import com.example.warehouse.repository.WarehouseZoneRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class WarehouseZoneService {
 
     private final WarehouseZoneRepository zoneRepository;
@@ -69,6 +71,7 @@ public class WarehouseZoneService {
                 String.format("Created zone '%s' in warehouse '%s'", savedZone.getName(), warehouse.getName())
         );
 
+        log.info("Created new zone: {} with code: {} in warehouse: {}", savedZone.getName(), savedZone.getCode(), warehouse.getName());
         return zoneMapper.toWarehouseZoneResponse(savedZone);
     }
 
@@ -84,6 +87,8 @@ public class WarehouseZoneService {
         if (!warehouseRepository.existsById(warehouseId)) {
             throw new ResourceNotFoundException("Warehouse", "id", warehouseId);
         }
+
+        log.info("Retrieving all zones for warehouse with ID: {}", warehouseId);
         return zoneRepository.findByWarehouseId(warehouseId).stream()
                 .map(zoneMapper::toWarehouseZoneResponse)
                 .collect(Collectors.toList());
@@ -105,6 +110,8 @@ public class WarehouseZoneService {
 
         WarehouseZone zone = zoneRepository.findByWarehouseIdAndId(warehouseId, zoneId)
                 .orElseThrow(() -> new ResourceNotFoundException("WarehouseZone", "id", zoneId + " not found in warehouse " + warehouseId));
+
+        log.info("Retrieving zone with ID: {} in warehouse with ID: {}", zoneId, warehouseId);
         return zoneMapper.toWarehouseZoneResponse(zone);
     }
 
@@ -143,6 +150,7 @@ public class WarehouseZoneService {
                 String.format("Updated zone '%s' in warehouse '%s'", updatedZone.getName(), warehouse.getName())
         );
 
+        log.info("Updated zone: {} with code: {} in warehouse: {}", updatedZone.getName(), updatedZone.getCode(), warehouse.getName());
         return zoneMapper.toWarehouseZoneResponse(updatedZone);
     }
 
@@ -172,6 +180,7 @@ public class WarehouseZoneService {
                 String.format("Deleted zone '%s' from warehouse '%s'", zone.getName(), zone.getWarehouse().getName())
         );
 
+        log.info("Deleting zone: {} with code: {} from warehouse: {}", zone.getName(), zone.getCode(), zone.getWarehouse().getName());
         zoneRepository.delete(zone);
     }
 }

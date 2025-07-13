@@ -12,6 +12,7 @@ import com.example.warehouse.payload.response.RoleResponse;
 import com.example.warehouse.repository.RoleRepository;
 import com.example.warehouse.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RoleService {
 
     private static final Set<String> PROTECTED_ROLES = Set.of("ROLE_ADMIN", "ROLE_USER");
@@ -42,6 +44,7 @@ public class RoleService {
      */
     @Transactional(readOnly = true)
     public List<RoleResponse> getAllRoles() {
+        log.info("Retrieving all roles from the repository");
         return roleRepository.findAll().stream()
                 .map(roleMapper::toRoleResponse)
                 .collect(Collectors.toList());
@@ -56,6 +59,7 @@ public class RoleService {
      */
     @Transactional(readOnly = true)
     public RoleResponse getRoleById(Integer roleId) {
+        log.info("Retrieving role by ID: {}", roleId);
         return roleRepository.findById(roleId)
                 .map(roleMapper::toRoleResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "id", roleId));
@@ -88,6 +92,7 @@ public class RoleService {
                 String.format("Created role '%s'", savedRole.getName())
         );
 
+        log.info("Role created: {}", savedRole.getName());
         return roleMapper.toRoleResponse(savedRole);
     }
 
@@ -126,6 +131,7 @@ public class RoleService {
                 String.format("Updated role name to '%s'", updatedRole.getName())
         );
 
+        log.info("Role updated: {}", updatedRole.getName());
         return roleMapper.toRoleResponse(updatedRole);
     }
 
@@ -158,6 +164,7 @@ public class RoleService {
                 String.format("Deleted role '%s'", role.getName())
         );
 
+        log.info("Deleting role: {}", role.getName());
         roleRepository.delete(role);
     }
 
@@ -179,7 +186,7 @@ public class RoleService {
         }
 
         for (User user : users) {
-            if (user.getRoles().add(role)) { // .add() returns true if the role was not already present
+            if (user.getRoles().add(role)) {
                 auditLogService.logAction(
                         securityContextService.getCurrentActor(),
                         AuditActionEnum.ASSIGN_ROLE_TO_USER,
@@ -189,6 +196,8 @@ public class RoleService {
                 );
             }
         }
+
+        log.info("Assigned role '{}' to {} users", role.getName(), users.size());
         // No need to call userRepository.saveAll(users) if User entity owns the relationship
         // and cascade settings are appropriate. If not, you would save here.
     }
@@ -225,5 +234,7 @@ public class RoleService {
                     String.format("Unassigned role '%s' from user '%s'", role.getName(), user.getUsername())
             );
         }
+
+        log.info("Unassigned role '{}' from user '{}'", role.getName(), user.getUsername());
     }
 }

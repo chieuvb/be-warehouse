@@ -13,6 +13,7 @@ import com.example.warehouse.payload.response.ProductInventoryResponse;
 import com.example.warehouse.payload.response.StockLogResponse;
 import com.example.warehouse.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductInventoryService {
 
     private final ProductInventoryRepository inventoryRepository;
@@ -33,11 +35,13 @@ public class ProductInventoryService {
 
     @Transactional(readOnly = true)
     public Page<ProductInventoryResponse> getAllInventory(Pageable pageable) {
+        log.info("Retrieving all product inventory records");
         return inventoryRepository.findAll(pageable).map(inventoryMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Page<StockLogResponse> getStockLogsByInventoryId(Long inventoryId, Pageable pageable) {
+        log.info("Retrieving stock logs for inventory ID: {}", inventoryId);
         return stockLogRepository.findByInventoryId(inventoryId, pageable).map(stockLogMapper::toResponse);
     }
 
@@ -71,6 +75,7 @@ public class ProductInventoryService {
                 request.getReferenceId()
         );
 
+        log.info("Inventory adjusted for product ID: {}, new quantity: {}", request.getProductId(), newQuantity);
         return inventoryMapper.toResponse(savedInventory);
     }
 
@@ -109,6 +114,9 @@ public class ProductInventoryService {
         inventoryRepository.save(destInventory);
         logTransaction(destInventory, StockLogEnum.GOODS_RECEIPT, request.getQuantity(), destQtyBefore, request.getNote(),
                 ReferenceActionEnum.PURCHASE_ORDER.toString(), destInventory.getId().toString());
+
+        log.info("Moved {} units of product ID: {} from zone ID: {} to zone ID: {}",
+                request.getQuantity(), request.getProductId(), request.getSourceZoneId(), request.getDestinationZoneId());
     }
 
     /**

@@ -14,6 +14,7 @@ import com.example.warehouse.repository.ProductCategoryRepository;
 import com.example.warehouse.repository.ProductRepository;
 import com.example.warehouse.repository.UnitOfMeasureRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -43,6 +45,7 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
+        log.info("Retrieving all products with pagination: {}", pageable);
         return productRepository.findAll(pageable).map(productMapper::toProductResponse);
     }
 
@@ -54,6 +57,7 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Integer productId) {
+        log.info("Retrieving product by ID: {}", productId);
         return productRepository.findById(productId)
                 .map(productMapper::toProductResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
@@ -67,6 +71,7 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductResponse getProductBySku(String sku) {
+        log.info("Retrieving product by SKU: {}", sku);
         return productRepository.findBySku(sku)
                 .map(productMapper::toProductResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "sku", sku));
@@ -80,6 +85,7 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductResponse getProductByBarcode(String barcode) {
+        log.info("Retrieving product by barcode: {}", barcode);
         return productRepository.findByBarcode(barcode)
                 .map(productMapper::toProductResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "barcode", barcode));
@@ -126,6 +132,7 @@ public class ProductService {
                 String.format("Created product '%s' with SKU '%s'", savedProduct.getName(), savedProduct.getSku())
         );
 
+        log.info("Product created: {}", savedProduct.getName());
         return productMapper.toProductResponse(savedProduct);
     }
 
@@ -167,6 +174,7 @@ public class ProductService {
                 String.format("Updated product '%s'", updatedProduct.getName())
         );
 
+        log.info("Product updated: {}", updatedProduct.getName());
         return productMapper.toProductResponse(updatedProduct);
     }
 
@@ -197,6 +205,7 @@ public class ProductService {
                 String.format("Deleted product '%s' with SKU '%s'", product.getName(), product.getSku())
         );
 
+        log.info("Deleting product: {}", product.getName());
         productRepository.delete(product);
     }
 }

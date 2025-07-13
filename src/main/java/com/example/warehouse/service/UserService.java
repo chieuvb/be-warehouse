@@ -14,6 +14,7 @@ import com.example.warehouse.payload.response.UserResponse;
 import com.example.warehouse.repository.RoleRepository;
 import com.example.warehouse.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,6 +27,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -37,11 +39,13 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Page<UserResponse> getAllUsers(Pageable pageable) {
+        log.info("Retrieving all users with pagination: {}", pageable);
         return userRepository.findAll(pageable).map(userMapper::toUserResponse);
     }
 
     @Transactional(readOnly = true)
     public UserResponse getUserById(Integer userId) {
+        log.info("Retrieving user by ID: {}", userId);
         return userRepository.findById(userId)
                 .map(userMapper::toUserResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -49,6 +53,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponse getUserByUsername(String username) {
+        log.info("Retrieving user by username: {}", username);
         return userRepository.findByUsername(username)
                 .map(userMapper::toUserResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
@@ -94,6 +99,7 @@ public class UserService {
                 String.format("Created user '%s'", savedUser.getUsername())
         );
 
+        log.info("User created: {}", savedUser.getUsername());
         return userMapper.toUserResponse(savedUser);
     }
 
@@ -132,6 +138,7 @@ public class UserService {
                 String.format("Updated user details for '%s'", updatedUser.getUsername())
         );
 
+        log.info("User updated: {}", updatedUser.getUsername());
         return userMapper.toUserResponse(updatedUser);
     }
 
@@ -163,6 +170,8 @@ public class UserService {
                 user.getId().toString(),
                 String.format("Updated roles for user '%s'", user.getUsername())
         );
+
+        log.info("User roles updated for: {}", user.getUsername());
     }
 
     /**
@@ -195,6 +204,8 @@ public class UserService {
                 user.getId().toString(),
                 String.format("User '%s' changed their own password.", user.getUsername())
         );
+
+        log.info("Password changed for user: {}", user.getUsername());
     }
 
     /**
@@ -228,6 +239,7 @@ public class UserService {
                 String.format("Deleted user '%s'", user.getUsername())
         );
 
+        log.info("Deleting user: {}", user.getUsername());
         userRepository.delete(user);
     }
 }
