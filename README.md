@@ -2,20 +2,80 @@
 
 This API provides endpoints for managing warehouse operations such as user authentication, product and category management, warehouse and zone operations, inventory tracking, and audit logging.
 
-## Base URL
+---
+
+## 📌 Technologies Used
+
+- **Java 21**
+- **Spring Boot 3.5.3**
+- **Spring Security + JWT**
+- **Spring Data JPA (Hibernate)**
+- **MySQL**
+- **Lombok**
+- **Springdoc OpenAPI (Swagger UI)**
+- **JUnit 5**
+
+---
+
+## 🔧 Server Configuration
+
+### 🔗 Base URL
 
 http://localhost:8080/api
 
+### 🧠 Admin Account
 
-Authentication is required for most endpoints using JWT Bearer tokens.
+- **Username:** `admin`  
+- **Password:** `iamadmin`
+
+---
+
+### ⚙️ application.properties
+
+```properties
+# ===================================================================
+# SERVER CONFIGURATION
+# ===================================================================
+server.port=8080
+server.servlet.context-path=/api
+
+# ===================================================================
+# DATABASE CONFIGURATION (MySQL)
+# ===================================================================
+spring.datasource.url=jdbc:mysql://localhost:3306/warehouse?createDatabaseIfNotExist=true&serverTimezone=UTC
+spring.datasource.username=#your_username
+spring.datasource.password=#your_password
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# ===================================================================
+# JPA / HIBERNATE CONFIGURATION
+# ===================================================================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.open-in-view=false
+
+# ===================================================================
+# JWT, CORS, and API Documentation
+# ===================================================================
+jwt.secret.key=#your_jwt_secret_key
+jwt.expiration.ms=3600000
+app.cors.allowed-origins=#ypur_allowed_origins
+
+springdoc.api-docs.enabled=false
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.enabled=false
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.swagger-ui.title=Warehouse Management API
+springdoc.swagger-ui.description=API documentation for the Warehouse Management System.
+springdoc.swagger-ui.version=1.0.0
+````
+
+> ⚠️ **Security Note:** Move database credentials and JWT secrets to environment variables in production!
 
 ---
 
 ## 🔐 Authentication
-
-Admin account:
-- **Username:** admin
-- **Password:** iamadmin
 
 | Method | Endpoint         | Description                            |
 |--------|------------------|----------------------------------------|
@@ -145,18 +205,19 @@ Admin account:
 
 ## 🔐 Security
 
-All endpoints (except authentication) require a valid JWT Bearer token to be passed in the `Authorization` header:
+All endpoints (except authentication) require a valid JWT Bearer token in the `Authorization` header:
 
+```
 Authorization: Bearer <your_token_here>
-
+```
 
 ---
 
 ## 📄 API Specification
 
-- OpenAPI Version: 3.1.0
-- Version: 1.0
-- Format: JSON
+* **OpenAPI Version:** 3.1.0
+* **Version:** 1.0
+* **Format:** JSON
 
 ---
 
