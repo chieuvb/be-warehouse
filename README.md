@@ -21,7 +21,13 @@ This API provides endpoints for managing warehouse operations such as user authe
 
 ### 🔗 Base URL
 
+```
 http://localhost:8080/api
+```
+
+### 🛢️ Database
+
+[warehouse_dump](/warehouse_dump.sql)
 
 ### 🧠 Admin Account
 
@@ -60,7 +66,7 @@ spring.jpa.open-in-view=false
 # ===================================================================
 jwt.secret.key=#your_jwt_secret_key
 jwt.expiration.ms=3600000
-app.cors.allowed-origins=#ypur_allowed_origins
+app.cors.allowed-origins=#your_allowed_origins
 
 springdoc.api-docs.enabled=false
 springdoc.api-docs.path=/v3/api-docs
