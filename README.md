@@ -13,6 +13,10 @@ Authentication is required for most endpoints using JWT Bearer tokens.
 
 ## 🔐 Authentication
 
+Admin account:
+- **Username:** admin
+- **Password:** iamadmin
+
 | Method | Endpoint         | Description                            |
 |--------|------------------|----------------------------------------|
 | POST   | `/auth/login`    | Authenticate user and return JWT token |
