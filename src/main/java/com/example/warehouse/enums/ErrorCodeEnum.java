@@ -5,6 +5,7 @@ public enum ErrorCodeEnum {
     // Authentication & Authorization Errors
     AUTH_INVALID_CREDENTIALS,
     AUTH_TOKEN_EXPIRED,
+    AUTH_TOKEN_MALFORMED,
     AUTH_TOKEN_INVALID,
     AUTH_ACCESS_DENIED,
     FORBIDDEN_OPERATION,

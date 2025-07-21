@@ -4,6 +4,10 @@ import com.example.warehouse.enums.ErrorCodeEnum;
 import com.example.warehouse.payload.response.ApiError;
 import com.example.warehouse.payload.response.ApiResponse;
 import com.example.warehouse.utility.ResponseUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +76,42 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
 
         return ResponseUtil.createErrorResponse(status, errorCodeEnum, message, path);
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ApiResponse<Object>> handleExpiredJwt(
+            ExpiredJwtException ex, HttpServletRequest request) {
+
+        return ResponseUtil.createErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                ErrorCodeEnum.AUTH_TOKEN_EXPIRED,
+                "Your session has expired. Please login again.",
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(MalformedJwtException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMalformedJwt(
+            MalformedJwtException ex, HttpServletRequest request) {
+
+        return ResponseUtil.createErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                ErrorCodeEnum.AUTH_TOKEN_MALFORMED,
+                "Invalid token format.",
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler({SignatureException.class, SecurityException.class})
+    public ResponseEntity<ApiResponse<Object>> handleJwtSignature(
+            Exception ex, HttpServletRequest request) {
+
+        return ResponseUtil.createErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                ErrorCodeEnum.AUTH_TOKEN_INVALID,
+                "Invalid token signature.",
+                request.getRequestURI()
+        );
     }
 
     @Override
