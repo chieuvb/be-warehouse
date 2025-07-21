@@ -125,7 +125,7 @@ public class WarehouseZoneService {
      * @throws ResourceNotFoundException if the warehouse or zone does not exist
      * @throws ResourceConflictException if a zone with the same name already exists in the warehouse
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public WarehouseZoneResponse updateZone(Integer warehouseId, Integer zoneId, WarehouseZoneRequest request) {
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", warehouseId));
